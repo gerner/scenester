@@ -57,7 +57,6 @@ namespace :events do
     events_found = 0
     events_saved = 0
     RMeetup::Client.api_key = "18d6110753a7a870dd59eb4919"
-    
 
     results = RMeetup::Client.fetch(:events,{:zip => "98116"})
 

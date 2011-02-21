@@ -2,6 +2,7 @@ class EventsController < ApplicationController
   # GET /events
   # GET /events.xml
   def index
+    Time.zone = "America/Los_Angeles"
     now = Time.new
     today = Time.local(now.year, now.month, now.day, 4, 0, 0)
     #TODO: this should really be in the user's timezone, or in the event catalog's timezone
@@ -15,6 +16,7 @@ class EventsController < ApplicationController
   end
 
   def search
+    Time.zone = "America/Los_Angeles"
     @q = params[:q]
     now = Time.new
     today = Time.local(now.year, now.month, now.day, 4, 0, 0)
