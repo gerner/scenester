@@ -1,0 +1,57 @@
+.event {
+	padding:2px;
+	padding-top:5px;
+	margin-top:20px;
+	border-top:3px solid gray;
+}	
+
+.event .image {
+	float:left;
+}
+
+.event .source {
+	float:right;
+	color: gray;
+	font-size:12pt;
+}
+
+.event .image img {
+	padding:2px;
+	border:1px solid #CCC;
+	margin:2px;
+	margin-right:10px;
+}
+
+.event .title {
+}
+
+.event .venue {
+	color: gray;
+}
+
+.event .time {
+	margin:1em;
+	font-size:14pt;
+}
+
+.event .admin {
+	font-size:smaller;
+	float:right;
+}
+
+.event .tags {
+	font-size:smaller;
+	color: gray;
+}
+
+.clearfix:after {
+	content:".";
+	display:block;
+	height:0;
+	clear:both;
+	visibility:hidden;
+}
+.clearfix {display:inline-block;}
+/* Hide from IE Mac \*/
+	.clearfix {display:block;}
+/* End hide from IE Mac */

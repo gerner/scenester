@@ -4,6 +4,7 @@
   <%= text_field_tag(:q, @q) %>
   <%= submit_tag("Search") %>
 <% end %>
+<%= link_to 'Back to Events Today', events_path %>
 
 <%= render 'list' %>
 
