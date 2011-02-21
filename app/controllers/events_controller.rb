@@ -10,6 +10,22 @@ class EventsController < ApplicationController
     respond_to do |format|
       format.html # index.html.erb
       format.xml  { render :xml => @events }
+      format.ics  { render :text => Event.to_ics(@events) }
+    end
+  end
+
+  def search
+    @q = params[:q]
+    now = Time.new
+    today = Time.local(now.year, now.month, now.day, 4, 0, 0)
+    #TODO: this should really be in the user's timezone, or in the event catalog's timezone
+    likeQ = "%#{@q}%"
+    @events = Event.where("start > ? AND start < ? AND (tags LIKE ? OR title LIKE ? OR venue LIKE ?)", today, today.advance(:months => 1), likeQ, likeQ, likeQ).order("start").all
+
+    respond_to do |format|
+      format.html # index.html.erb
+      format.xml  { render :xml => @events }
+      format.ics  { render :text => Event.to_ics(@events) }
     end
   end
 
