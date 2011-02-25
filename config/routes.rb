@@ -1,4 +1,5 @@
 Events::Application.routes.draw do
+  match "events/foursquare" => "events#foursquare"
   resources :events
 
   get "home/index"

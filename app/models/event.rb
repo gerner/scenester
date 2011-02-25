@@ -24,6 +24,6 @@ class Event < ActiveRecord::Base
   def self.find_attending(venue, t, options = {})
     options = {:hours_before => 2, :hours_after => 1}.merge(options)
     #TODO: need to do a fuzzier match on the venue
-    Event.where("venue = ? AND start > ? AND end < ?", venue, t.advance(:hours => -options[:hours_before]), t.advance(:hours => options[:hours_after]))
+    Event.where("venue = ? AND start < ? AND end > ?", venue, t.advance(:hours => options[:hours_before]), t.advance(:hours => -options[:hours_after]))
   end
 end

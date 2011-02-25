@@ -1,3 +1,5 @@
+require 'foursquare'
+
 class EventsController < ApplicationController
   # GET /events
   # GET /events.xml
@@ -6,7 +8,7 @@ class EventsController < ApplicationController
     now = Time.new
     today = Time.local(now.year, now.month, now.day, 4, 0, 0)
     #TODO: this should really be in the user's timezone, or in the event catalog's timezone
-    @events = Event.where("start > ? AND start < ?", today, today.advance(:days => 1)).order("start").all
+    @events = Event.where("start > ? AND start < ?", now, today.advance(:days => 1)).order("start").all
 
     respond_to do |format|
       format.html # index.html.erb
@@ -28,6 +30,25 @@ class EventsController < ApplicationController
       format.html # index.html.erb
       format.xml  { render :xml => @events }
       format.ics  { render :text => Event.to_ics(@events) }
+    end
+  end
+
+  def foursquare
+    authorization_code="EWPW4SAQO3THR24WGOJ4TSY5AK5VFSIVSTBG2HQAFYRFZLQ0"
+
+    user = Foursquare::User.new(authorization_code)
+    checkins = user.checkins["response"]["checkins"]["items"]
+    @events = []
+    checkins.each do |c|
+      venue = c["venue"]["name"]
+      t = Time.at(c["createdAt"])
+      e = Event.find_attending(venue, t).first
+      @events << e if e
+    end
+
+    respond_to do |format|
+      format.html { render 'index' }
+
     end
   end
 

@@ -154,7 +154,7 @@ namespace :events do
         e.url = plays[e.title]
         e.venue = venue
         e.start = t
-        e.end = t
+        e.end = t.advance(:hours => 2)
         e.source = "seattlerep"
         e.tags = "Performing Arts"
         unless Event.find_matching(e).count > 0

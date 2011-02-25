@@ -1,6 +1,6 @@
 <% @events.each do |event| %>
   <div class="event clearfix">
-    <div class="image"><a href="<%= event.image %>"><img src="<%= event.image == "" ? "images/seattlelogoinverse.png" : event.image %>" width=150 height=150 /></a></div>
+    <div class="image"><a href="<%= event.image %>"><img src="<%= event.image.blank? ? "/images/seattlelogoinverse.png" : event.image %>" width=150 height=150 /></a></div>
     <div class="source"><%= event.source %></div>
     <div class="title">
       <a href="<%= event.url %>"><%= event.title %></a>
