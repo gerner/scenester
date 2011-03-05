@@ -2,6 +2,8 @@ ATTEND_HOURS_BEFORE = 2
 ATTEND_HOURS_AFTER = 1
 
 class Event < ActiveRecord::Base
+  validates_uniqueness_of :source_id, :scope => :source
+  validates_presence_of :title
 
   belongs_to :venue
 
@@ -25,7 +27,8 @@ class Event < ActiveRecord::Base
 
   def self.find_matching(e)
     #TODO: what if an event has no url and has just changed time? how to differentiate this from events that recur (same title, different event)
-    Event.where("(title = ? AND start = ?) OR (url = ?)", e.title, e.start, e.url)
+    #Event.where("(title = ? AND start = ?) OR (url = ?)", e.title, e.start, e.url)
+    Event.where(:source => e.source, :source_id => e.source_id)
   end
 
   def self.find_attending(venue_name, t, options = {})
