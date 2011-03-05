@@ -1,9 +1,19 @@
-<h1>Listing <%= @events.size %> events today</h1>
-<%= form_tag(search_path, :method => "get") do %>
-  <%= label_tag(:q, "Search for:") %>
-  <%= text_field_tag(:q) %>
-  <%= submit_tag("Search") %>
-<% end %>
+
+	<div class="bread-crumbs"><a href="/">Home</a> &raquo; Today</div>
+	
+	<h1><%= @events.size %> events Today</h1>
+	
+	
+	<div class="bread-crumb-portfolio">
+		View: 
+		<a href="#">Music</a>
+		<a href="#">Art</a>
+		<a href="#">Food and Drink</a>
+		<a href="#">Performing Arts</a>
+        <a href="#">Tech & Sci</a>
+	</div>
+	
+	<br/>
 
 <%= render 'list' %>
 

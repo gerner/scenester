@@ -21,10 +21,13 @@ class EventsController < ApplicationController
     Time.zone = "America/Los_Angeles"
     @q = params[:q]
     now = Time.new
-    today = Time.local(now.year, now.month, now.day, 4, 0, 0)
     #TODO: this should really be in the user's timezone, or in the event catalog's timezone
-    likeQ = "%#{@q}%"
-    @events = Event.where("start > ? AND start < ? AND (tags LIKE ? OR title LIKE ? OR venue LIKE ?)", today, today.advance(:months => 1), likeQ, likeQ, likeQ).order("start").all
+    if @q.starts_with?("source:")
+      @events = Event.where("start > ? AND start < ? AND source = ?", now, now.advance(:months => 1), @q[7...@q.length]).order("start").all
+    else
+      likeQ = "%#{@q}%"
+      @events = Event.where("start > ? AND start < ? AND (tags LIKE ? OR title LIKE ? OR venue_name LIKE ?)", now, now.advance(:months => 1), likeQ, likeQ, likeQ).order("start").all
+    end
 
     respond_to do |format|
       format.html # index.html.erb
@@ -36,15 +39,21 @@ class EventsController < ApplicationController
   def foursquare
     authorization_code="EWPW4SAQO3THR24WGOJ4TSY5AK5VFSIVSTBG2HQAFYRFZLQ0"
 
+    t = Time.now
     user = Foursquare::User.new(authorization_code)
     checkins = user.checkins["response"]["checkins"]["items"]
+    logger.info("foursquare responded in #{((Time.now - t) * 1000).round}ms")
     @events = []
+    #vtimes = []
     checkins.each do |c|
       venue = c["venue"]["name"]
       t = Time.at(c["createdAt"])
       e = Event.find_attending(venue, t).first
       @events << e if e
+      #vtimes << {:venue => venue, :time => t}
     end
+
+    #@events = Event.find_attending(vtimes)
 
     respond_to do |format|
       format.html { render 'index' }

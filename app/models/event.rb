@@ -2,6 +2,13 @@ ATTEND_HOURS_BEFORE = 2
 ATTEND_HOURS_AFTER = 1
 
 class Event < ActiveRecord::Base
+
+  belongs_to :venue
+
+  #-------------------
+  # static methods
+  #-------------------
+  
   def self.to_ics(events)
     cal = Icalendar::Calendar.new
     events.each do |e|
@@ -10,7 +17,7 @@ class Event < ActiveRecord::Base
         dtend [e.end, e.start.advance(:hours => 2)].max.to_datetime
         summary e.title
         description "#{e.source}: #{e.url}\n#{e.tags}"
-        location e.venue
+        location e.venue_name
       end
     end
     cal.to_ical
@@ -21,9 +28,36 @@ class Event < ActiveRecord::Base
     Event.where("(title = ? AND start = ?) OR (url = ?)", e.title, e.start, e.url)
   end
 
-  def self.find_attending(venue, t, options = {})
+  def self.find_attending(venue_name, t, options = {})
     options = {:hours_before => 2, :hours_after => 1}.merge(options)
     #TODO: need to do a fuzzier match on the venue
-    Event.where("venue = ? AND start < ? AND end > ?", venue, t.advance(:hours => options[:hours_before]), t.advance(:hours => -options[:hours_after]))
+    Event.where("venue_name = ? AND start < ? AND end > ?", venue_name, t.advance(:hours => options[:hours_before]), t.advance(:hours => -options[:hours_after]))
+  end
+
+  def self.find_attending_any(vtimes, options = {})
+    options = {:hours_before => 2, :hours_after => 1}.merge(options)
+    #TODO: need to do a fuzzier match on the venue
+    
+    whereValues = []
+    vtimes.each do |v|
+      whereValues << v[:venue]
+      whereValues << v[:time].advance(:hours => options[:hours_before])
+      whereValues << v[:time].advance(:hours => -options[:hours_after])
+    end
+    whereClause = (["(venue_name = ? AND start < ? AND end > ?)"] * vtimes.size).join(" OR ")
+
+    Event.where([whereClause] + whereValues)
+  end
+
+  #-------------------
+  # instance methods
+  #-------------------
+  
+  def safe_image
+    self.image.blank? ? "/images/seattlelogoinverse.png" : self.image
+  end
+
+  def tonight?
+    (self.start - Time.now).abs < 86400
   end
 end

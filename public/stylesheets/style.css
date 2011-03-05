@@ -1,0 +1,34 @@
+/*
+Theme Name: Touchstone
+Version: 1.0
+Author: ProgressionStudios
+Author URI: http://themeforest.net/user/ProgressionStudios
+*/
+@import url(reset.css);
+@import url(standard.css);
+@import url(fancybox.css);
+@import url(orbit.css);
+@import url(nivo-slider.css);
+@import url(events.css);
+
+
+/* @import url(css/standard_wood.css);   */			/*  Wood Color Scheme */
+/* @import url(css/standard_purple.css); */   		/*  Purple Color Scheme */
+/* @import url(css/standard_gold.css);   */  		/*  Gold Color Scheme */
+/* @import url(css/standard_dark.css);   */   		/*  Dark Color Scheme */
+/* @import url(css/standard_green.css);  */   		/*  Green Color Scheme */
+/* @import url(css/standard_red.css);    */			/*  Red Color Scheme */
+
+/* @import url(css/standard_light_blue.css);   */    		/*  Light Blue Color Scheme */
+/* @import url(css/standard_light_red.css);    */  			/*  Light Red Color Scheme */
+/* @import url(css/standard_light_green.css);  */ 			/*  Light Green Color Scheme */
+/* @import url(css/standard_light_purple.css); */   		/*  Light Purple Color Scheme */
+/* @import url(css/standard_light_gold.css);   */ 			/*  Light Gold Color Scheme */
+/* @import url(css/standard_light_black.css);  */ 			/*  Light Black Color Scheme */
+/* @import url(css/standard_light.css);        */ 			/*  Light Color Scheme */
+
+
+/* @import url(css/standard_dark_blue.css);    */			/*  Dark Blue Color Scheme */
+/* @import url(css/standard_dark_red.css);    */			/*  Dark Red Color Scheme */
+/* @import url(css/standard_dark_purple.css);    */			/*  Dark Purple Color Scheme */
+/* @import url(css/standard_dark_green.css);    */			/*  Dark Green Color Scheme */

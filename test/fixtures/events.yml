@@ -4,7 +4,7 @@ one:
   image: MyString
   title: MyString
   url: MyString
-  venue: MyString
+  venue_name: MyString
   start: 2011-02-13 14:19:31
   end: 2011-02-13 14:19:31
   tags: MyString
@@ -14,7 +14,7 @@ two:
   image: MyString
   title: MyString
   url: MyString
-  venue: MyString
+  venue_name: MyString
   start: 2011-02-13 14:19:31
   end: 2011-02-13 14:19:31
   tags: MyString

@@ -1,10 +1,7 @@
-<h1>Listing <%= @events.size %> events in the next month for <%= @q %> </h1>
-<%= form_tag(search_path, :method => "get") do %>
-  <%= label_tag(:q, "Search for:") %>
-  <%= text_field_tag(:q, @q) %>
-  <%= submit_tag("Search") %>
-<% end %>
 <%= link_to 'Back to Events Today', events_path %>
+	<div class="bread-crumbs"><a href="/">Home</a> &raquo; Search</div>
+	
+    <h1><%= @events.size %> events for "<%= @q %>"</h1>
 
 <%= render 'list' %>
 

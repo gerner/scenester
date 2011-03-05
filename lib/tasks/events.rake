@@ -19,8 +19,13 @@ namespace :events do
     puts "#{events.size} events in database"
   end
 
+  desc "get all events"
+  task :events => [:eventbrite, :brownpapertickets, :meetup, :seattlerep, :fifthave, :seattleweekly, :kexp] do
+  end
+
   desc "get eventbrite events coming soon"
   task :eventbrite => :environment do
+    puts "getting eventbrite events..."
     page_number = 1
     more_events = true
     events_saved = 0
@@ -37,23 +42,24 @@ namespace :events do
         e.image = event["logo"]
         e.title = event["title"]
         e.url = event["url"]
-        e.venue = event["venue"]["name"]
+        e.venue_name = event["venue"]["name"]
         e.start = Time.parse(event["start_date"])
         e.end = Time.parse(event["end_date"])
         e.tags = event["category"] + ", " + event["tags"]
         e.source = "eventbrite"
         unless Event.find_matching(e).count > 0
+          puts "saving #{e.title} at #{e.start}"
           e.save
           events_saved += 1
-          puts "saved #{event["title"]}"
         end
       end
     end
-    puts "#{events_found} events in Seattle from eventbright (#{events_saved} new)"
+    puts "#{events_found} events in Seattle from eventbrite (#{events_saved} new)"
   end
 
   desc "get meetup events coming soon"
   task :meetup => :environment do
+    puts "getting meetup events..."
     events_found = 0
     events_saved = 0
     RMeetup::Client.api_key = "18d6110753a7a870dd59eb4919"
@@ -74,7 +80,7 @@ namespace :events do
       e.image = event.group_photo_url || event.photo_url
       e.title = Iconv.conv('utf-8', 'iso-8859-1', event.group_name + ":" + event.name)
       e.url = event.event_url
-      e.venue = Iconv.conv('utf-8', 'iso-8859-1', event.venue_name)
+      e.venue_name = Iconv.conv('utf-8', 'iso-8859-1', event.venue_name)
       e.start = event.time
       e.end = event.time
       e.source = "meetup"
@@ -82,6 +88,7 @@ namespace :events do
       topics = group.topics.collect { |t| t["name"]}
       e.tags = Iconv.conv('utf-8', 'iso-8859-1', topics.join(","))
       unless Event.find_matching(e).count > 0
+        puts "#{e.title} at #{e.start}"
         e.save
         events_saved += 1
       end
@@ -89,8 +96,10 @@ namespace :events do
     puts "#{events_found} events in Seattle from meetup (#{events_saved} new)"
   end
 
+=begin
   desc "get brown paper tickets events"
   task :brownpapertickets => :environment do
+    puts "getting brownpaperticket events..."
     events_found = 0
     events_saved = 0
     bpt = File.read('/home/nick/downloads/bpt.json')
@@ -105,12 +114,46 @@ namespace :events do
       e.image = ""
       e.title = event["e_name"]
       e.url = event["e_web"]
-      e.venue = event["e_venue"]
+      e.venue_name = event["e_venue"]
       e.start = Time.parse(event["dates"][0]["start_date"])
       e.end = Time.parse(event["dates"][0]["end_date"])
       e.source = "brownpapertickets"
       e.tags = event["category"]
       unless Event.find_matching(e).count > 0
+        puts "saving #{e.title} at #{e.start}"
+        e.save
+        events_saved += 1
+      end
+      
+    end
+    puts "#{events_found} events in Seattle from brownpapertickets (#{events_saved} new)"
+  end
+=end
+  
+  desc "get brown paper tickets events"
+  task :brownpapertickets => :environment do
+    puts "getting brownpaperticket events..."
+    events_found = 0
+    events_saved = 0
+    res = Net::HTTP.get(URI.parse("http://www.brownpapertickets.com/eventfeed/91"))
+    XML::Error.set_handler(&XML::Error::QUIET_HANDLER)
+    p = XML::HTMLParser.string(res, :options => XML::HTMLParser::Options::RECOVER | XML::HTMLParser::Options::NONET | XML::HTMLParser::Options::NOERROR | XML::HTMLParser::Options::NOWARNING)
+    d = p.parse
+
+    nodes = d.find('/html/body/bpt/event')
+    nodes.each do |n|
+      events_found += 1
+      e = Event.new
+      e.image = ""
+      e.title = n.find_first("e_name").content.strip
+      e.url = n.find_first("e_web").content.strip
+      e.venue_name = n.find_first("e_venue").content.strip
+      e.start = Time.parse(n.find_first("start_date").content)
+      e.end = Time.parse(n.find_first("end_date").content)
+      e.source = "brownpapertickets"
+      e.tags = n.find_first("category").content.strip
+      unless Event.find_matching(e).count > 0
+        puts "saving #{e.title} at #{e.start}"
         e.save
         events_saved += 1
       end
@@ -121,11 +164,13 @@ namespace :events do
 
   desc "get Seattle Rep Events"
   task :seattlerep => :environment do
+    puts "getting seattlerep events..."
     #scrape http://www.seattlerep.org/Plays/Calendar/
     Time.zone = "Pacific Time (US & Canada)"
     baseDate = Time.now
     venue = "Seattle Repertory Theatre"
     res = Net::HTTP.get(URI.parse("http://www.seattlerep.org/Plays/Calendar/"))
+    XML::Error.set_handler(&XML::Error::QUIET_HANDLER)
     p = XML::HTMLParser.string(res, :options => XML::HTMLParser::Options::RECOVER | XML::HTMLParser::Options::NONET | XML::HTMLParser::Options::NOERROR | XML::HTMLParser::Options::NOWARNING)
     d = p.parse
 
@@ -152,12 +197,13 @@ namespace :events do
         e.image = ""
         e.title = show.children[0].to_s
         e.url = plays[e.title]
-        e.venue = venue
+        e.venue_name = venue
         e.start = t
         e.end = t.advance(:hours => 2)
         e.source = "seattlerep"
         e.tags = "Performing Arts"
         unless Event.find_matching(e).count > 0
+          puts "saving #{e.title} at #{e.start}"
           e.save
           events_saved += 1
         end
@@ -168,6 +214,7 @@ namespace :events do
   
   desc "get 5th Ave Theater Events"
   task :fifthave => :environment do
+    puts "getting fifthave events..."
     #scrape http://www.seattlerep.org/Plays/Calendar/
     Time.zone = "Pacific Time (US & Canada)"
     baseDate = Time.now
@@ -175,6 +222,7 @@ namespace :events do
 
     #first we need to get the plays that are showing
     res = Net::HTTP.get(URI.parse("http://www.5thavenue.org/show/"))
+    XML::Error.set_handler(&XML::Error::QUIET_HANDLER)
     p = XML::HTMLParser.string(res, :options => XML::HTMLParser::Options::RECOVER | XML::HTMLParser::Options::NONET | XML::HTMLParser::Options::NOERROR | XML::HTMLParser::Options::NOWARNING)
     d = p.parse
 
@@ -204,22 +252,24 @@ namespace :events do
         e.image = ""
         e.title = show.children[2].inner_xml.to_s
         e.url = plays[e.title]
-        e.venue = venue
+        e.venue_name = venue
         e.start = t
         e.end = t
         e.source = "fifthave"
         e.tags = "Performing Arts"
         unless Event.find_matching(e).count > 0
+          puts "saving #{e.title} at #{e.start}"
           e.save
           events_saved += 1
         end
       end
     end
-    puts "#{events_found} events in Seattle from seattlerep (#{events_saved} new)"
+    puts "#{events_found} events in Seattle from fifthave (#{events_saved} new)"
   end
 
   desc "get events from Seattle Weekly"
   task :seattleweekly => :environment do
+    puts "getting seattleweekly events..."
     events_skipped = 0
     events_found = 0
     events_saved = 0
@@ -227,6 +277,7 @@ namespace :events do
     t = Time.now
     #res = Net::HTTP.get(URI.parse("http://www.seattleweekly.com/events/search/category:%5B293276%5D/date:#{t.year}-#{t.month}-#{t.day}/perPage:100/"))
     res = Net::HTTP.get(URI.parse("http://www.seattleweekly.com/events/search/date:#{t.year}-#{t.month}-#{t.day}/perPage:500/"))
+    XML::Error.set_handler(&XML::Error::QUIET_HANDLER)
     p = XML::HTMLParser.string(res, :options => XML::HTMLParser::Options::RECOVER | XML::HTMLParser::Options::NONET | XML::HTMLParser::Options::NOERROR | XML::HTMLParser::Options::NOWARNING)
     d = p.parse
     nodes = d.find("//div[@class='widget']//table/tr/td[@class='upper']")
@@ -235,7 +286,7 @@ namespace :events do
       e.image = ""
       e.title = n.find_first("h3/a").children[0].to_s.strip
       e.url = "http://www.seattleweekly.com"+n.find_first("h3/a").attributes["href"]
-      e.venue = n.find_first("h4/a").children.first.to_s.strip
+      e.venue_name = n.find_first("h4/a").children.first.to_s.strip
       e.source = "seattleweekly"
       eS = Time.new(t.year, t.month, t.day, 10, 0, 0)
       eE = eS.advance(:hours => 2)
@@ -266,11 +317,48 @@ namespace :events do
       end
       e.tags = tags.join(", ")
       unless Event.find_matching(e).count > 0
+        puts "saving #{e.title} at #{e.start}"
         e.save
         events_saved += 1
       end
     end
-    puts "#{events_found} events in Seattle from seattleweekly_arts (#{events_saved} new, #{events_skipped} skipped)"
+    puts "#{events_found} events in Seattle from seattleweekly (#{events_saved} new, #{events_skipped} skipped)"
+  end
+
+  desc "get events from KEXP"
+  task :kexp => :environment do
+    puts "getting kexp events..."
+    events_skipped = 0
+    events_found = 0
+    events_saved = 0
+    Time.zone = "Pacific Time (US & Canada)"
+    t = Time.now
+    res = Net::HTTP.get(URI.parse("http://www.kexp.org/events/clubcalendar.asp?count=0"))
+    XML::Error.set_handler(&XML::Error::QUIET_HANDLER)
+    p = XML::HTMLParser.string(res, :options => XML::HTMLParser::Options::RECOVER | XML::HTMLParser::Options::NONET | XML::HTMLParser::Options::NOERROR | XML::HTMLParser::Options::NOWARNING)
+    d = p.parse
+    nodes = d.find("/html/body/table/tr/td/table/tr/td/table/tr/td/table")[1].find("tr")
+    #find("td")[1].content.strip.split(",").collect { |s| s.gsub(/\([^)]*\)/, "").strip }
+    nodes.each do |n|
+      events_found += 1
+      parts = n.find("td")
+      bands = parts[1].content.strip
+      e = Event.new
+      e.image = ""
+      e.title = bands
+      e.url = "http://www.kexp.org/events/"+parts[0].find_first("a").attributes["href"]
+      e.venue_name = parts[0].content.strip.titlecase
+      e.source = "kexp"
+      e.start = Time.new(t.year, t.month, t.day, 19, 0, 0)
+      e.end = e.start.advance(:hours => 4)
+      e.tags = "music"
+      unless Event.find_matching(e).count > 0
+        puts "saving #{e.title} at #{e.start}"
+        e.save
+        events_saved += 1
+      end
+    end
+    puts "#{events_found} events in Seattle kexp (#{events_saved} new)"
   end
 end
 
