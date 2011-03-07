@@ -59,7 +59,7 @@ namespace :events do
 
         e.start = Time.parse(event["start_date"])
         e.end = Time.parse(event["end_date"])
-        e.tags = event["category"] + ", " + event["tags"]
+        e.tags = (event["category"] + ", " + event["tags"])[0..254]
         e.source = "eventbrite"
         e.source_id = event["id"].to_s
         unless Event.find_matching(e).count > 0
@@ -118,7 +118,7 @@ namespace :events do
       e.source_id = event.id.to_s
       group = groups[event.group_id]
       topics = group.topics.collect { |t| t["name"]}
-      e.tags = Iconv.conv('utf-8', 'iso-8859-1', topics.join(","))
+      e.tags = Iconv.conv('utf-8', 'iso-8859-1', topics.join(","))[0..254]
       unless Event.find_matching(e).count > 0
         puts "#{e.title} at #{e.start}"
         e.save!
@@ -425,7 +425,7 @@ namespace :events do
       tagNodes.each do |tag|
         tags << tag.first.to_s.strip
       end
-      e.tags = tags.join(", ")
+      e.tags = tags.join(", ")[0..254]
       unless Event.find_matching(e).count > 0
         puts "saving #{e.title} at #{e.start}"
         e.save!
