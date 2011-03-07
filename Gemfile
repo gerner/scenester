@@ -10,6 +10,7 @@ gem 'rMeetup'
 gem 'libxml-ruby'
 gem 'icalendar'
 gem 'foursquare-api'
+gem 'json'
 
 # Use unicorn as the web server
 # gem 'unicorn'
