@@ -12,6 +12,7 @@ class EventsController < ApplicationController
 
     respond_to do |format|
       format.html # index.html.erb
+      format.rss
       format.xml  { render :xml => @events }
       format.ics  { render :text => Event.to_ics(@events) }
     end
@@ -31,6 +32,7 @@ class EventsController < ApplicationController
 
     respond_to do |format|
       format.html # index.html.erb
+      format.rss
       format.xml  { render :xml => @events }
       format.ics  { render :text => Event.to_ics(@events) }
     end

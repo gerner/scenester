@@ -63,4 +63,12 @@ class Event < ActiveRecord::Base
   def tonight?
     (self.start - Time.now).abs < 86400
   end
+
+  def title_with_venue
+    if venue
+      "#{title} @ #{venue.name}"
+    else
+      title
+    end
+  end
 end

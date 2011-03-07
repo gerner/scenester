@@ -13,7 +13,4 @@ class Venue < ActiveRecord::Base
     return v_other
   end
 
-  def google_maps_embed
-
-  end
 end
