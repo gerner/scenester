@@ -53,7 +53,7 @@ namespace :events do
         v.long = event["venue"]["longitude"]
         v.name = event["venue"]["name"]
         v.source = "eventbrite"
-        v.source_id = event["venue"]["id"]
+        v.source_id = event["venue"]["id"].to_s
         v = Venue.find_and_merge(v)
         e.venue = v if v.save
 
@@ -61,7 +61,7 @@ namespace :events do
         e.end = Time.parse(event["end_date"])
         e.tags = event["category"] + ", " + event["tags"]
         e.source = "eventbrite"
-        e.source_id = event["id"]
+        e.source_id = event["id"].to_s
         unless Event.find_matching(e).count > 0
           puts "saving #{e.title} at #{e.start}"
           e.save!
@@ -99,7 +99,7 @@ namespace :events do
 
       v = Venue.new
       v.source = "meetup"
-      v.source_id = event.venue_id
+      v.source_id = event.venue_id.to_s
       v.name = event.venue_name
       v.phone = event.venue_phone
       v.lat = event.venue_lat
@@ -115,7 +115,7 @@ namespace :events do
       e.start = event.time
       e.end = event.time
       e.source = "meetup"
-      e.source_id = event.id
+      e.source_id = event.id.to_s
       group = groups[event.group_id]
       topics = group.topics.collect { |t| t["name"]}
       e.tags = Iconv.conv('utf-8', 'iso-8859-1', topics.join(","))
