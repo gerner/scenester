@@ -371,6 +371,7 @@ namespace :events do
       e.venue_name = n.find_first("h4/a").children.first.to_s.strip
       e.source = "seattleweekly"
       #TODO: need a better source id for seattle weekly events
+      #
       eS = Time.new(t.year, t.month, t.day, 10, 0, 0)
       eE = eS.advance(:hours => 2)
       #TODO: do we really want to skip all daily events?
