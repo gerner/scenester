@@ -19,17 +19,16 @@ class EventsController < ApplicationController
   end
 
   def search
+    unless params[:q]
+      redirect_to :action => "index"
+      return
+    end
+    logger.info("query: #{params[:q]}")
     Time.zone = "America/Los_Angeles"
     @q = params[:q]
     now = Time.new
     #TODO: this should really be in the user's timezone, or in the event catalog's timezone
-    if @q.starts_with?("source:")
-      @events = Event.where("start > ? AND start < ? AND source = ?", now, now.advance(:months => 1), @q[7...@q.length]).order("start").all
-    else
-      likeQ = "%#{@q}%"
-      @events = Event.where("start > ? AND start < ? AND (tags LIKE ? OR title LIKE ? OR venue_name LIKE ?)", now, now.advance(:months => 1), likeQ, likeQ, likeQ).order("start").all
-    end
-
+    @events = Event.search(@q, :clauses => ["start > ? AND start < ?"], :values => [now, now.advance(:months => 1)])
     respond_to do |format|
       format.html # index.html.erb
       format.rss

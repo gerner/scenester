@@ -1,5 +1,6 @@
 ATTEND_HOURS_BEFORE = 2
 ATTEND_HOURS_AFTER = 1
+QUERY_OPERATORS = ["source", "venue", "tag"]
 
 class Event < ActiveRecord::Base
   validates_uniqueness_of :source_id, :scope => :source
@@ -50,6 +51,40 @@ class Event < ActiveRecord::Base
     whereClause = (["(venue_name = ? AND start < ? AND end > ?)"] * vtimes.size).join(" OR ")
 
     Event.where([whereClause] + whereValues)
+  end
+
+  def self.search(q, options = {})
+    #split query up into tokens
+    parts = q.split
+    #search over title, use tags operator to search over tags
+    opts = options.merge({:clauses => [], :values => []})
+    clauses = opts[:clauses]
+    values = opts[:values]
+    parts.each do |part|
+      #query operator
+      op = part.split(":")
+      if(part.match(/[a-z]+:./) && QUERY_OPERATORS.index(op[0]))
+        op[1] = CGI::unescape(op[1])
+        if(op[0] == "source")
+          clauses << "source = ?"
+          values << op[1]
+        elsif(op[0] == "venue")
+          clauses << "venue_name LIKE ?"
+          values << "%#{op[1]}%"
+        elsif(op[0] == "tag")
+          clauses << "(lower(tags) LIKE ? OR lower(tags) LIKE ? OR lower(tags) LIKE ? OR lower(tags) LIKE ?)"
+          op[1] = CGI::unescape(op[1])
+          values << "%,#{op[1]}, %"
+          values << "#{op[1]},%"
+          values << "%,#{op[1]}"
+          values << op[1]
+        end
+      else
+        cluases << "title LIKE ?"
+        values << op[1]
+      end
+    end
+    Event.where([clauses.join(" AND ")]+values)
   end
 
   #-------------------

@@ -19,6 +19,6 @@
   <%= @venue.source_id %>
 </p>
 
-
+<%= link_to 'Events', search_path(:q => "venue:#{CGI.escape(@venue.name)}") %> |
 <%= link_to 'Edit', edit_venue_path(@venue) %> |
 <%= link_to 'Back', venues_path %>
