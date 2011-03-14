@@ -80,7 +80,7 @@ class Event < ActiveRecord::Base
           values << op[1]
         end
       else
-        cluases << "title LIKE ?"
+        cluases << "lower(title) LIKE ?"
         values << op[1]
       end
     end

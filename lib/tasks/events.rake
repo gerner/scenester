@@ -7,8 +7,52 @@ require 'iconv'
 require 'rubygems'
 require 'rmeetup'
 require 'xml'
+require 'amatch'
 
 namespace :events do
+
+  desc "find duplicate events"
+  task :duplicates => :environment do
+    #get some events that we want to check
+    events = Event.where("start > ? AND start < ?", Time.now.advance(:days => -1), Time.now.advance(:days => 1))
+    candidates = Event.where("start > ? AND start < ?", Time.now.advance(:days => -1), Time.now.advance(:days => 1))
+    events.each do |event|
+      #find candidate duplicates
+      candidates.each do |candidate|
+        next if event.id == candidate.id
+        #compute several similarity measures
+        # title exact match?
+        title_exact = event.title == candidate.title ? 1 : 0
+        # some similarity measure between titles
+        title_similarity  = event.title.levenshtein_similar(candidate.title)
+        #venue exact match?
+        venue_exact = event.venue_id == candidate.venue_id ? 1 : 0
+        #venue similarity
+        if event.venue_id == candidate.venue_id
+          venue_similarity = 1
+        elsif event.venue && candidate.venue
+          venue_similarity = event.venue.name.levenshtein_similar(candidate.venue.name)
+        else
+          venue_similarity = 0
+        end
+        # url matches?
+        url_matches = event.url == candidate.url ? 1 : 0
+        # source matches?
+        source_matches = event.source == candidate.source ? 1 : 0
+        # difference squared in start times
+        start_diff = ((event.start - candidate.start) ** 2.0) / 29859840000.0
+        #output likely duplicates
+        score = (title_exact + title_similarity + url_matches + source_matches + start_diff + venue_exact + venue_similarity)/7.0
+        #puts "#{score}"
+        #if (score > 0.3 && title_exact < 1)
+        #  puts "#{event.id} and #{candidate.id} seem to be duplicates with score:\n\t#{score}: #{title_similarity} #{venue_similarity} #{url_matches} #{source_matches} #{start_diff}"
+        #end
+        if (rand < 0.1)
+          puts "#{event.title.gsub(","," ")},#{candidate.title.gsub(","," ")},#{title_exact},#{title_similarity},#{venue_exact},#{venue_similarity},#{url_matches},#{source_matches},#{start_diff}"
+        end
+      end
+    end
+  end
   
   desc "print events"
   task :print => :environment do
@@ -128,40 +172,6 @@ namespace :events do
     puts "#{events_found} events in Seattle from meetup (#{events_saved} new)"
   end
 
-=begin
-  desc "get brown paper tickets events"
-  task :brownpapertickets => :environment do
-    puts "getting brownpaperticket events..."
-    events_found = 0
-    events_saved = 0
-    bpt = File.read('/home/nick/downloads/bpt.json')
-    results = JSON.parse(bpt)
-    i=0;
-    results.each do |event|
-      next unless event
-      next unless event["dates"][0]
-      next unless event["e_city"].strip.downcase == "seattle" && event["dates"][0]["start_date"].index("2011-02-1")
-      events_found += 1
-      e = Event.new
-      e.image = ""
-      e.title = event["e_name"]
-      e.url = event["e_web"]
-      e.venue_name = event["e_venue"]
-      e.start = Time.parse(event["dates"][0]["start_date"])
-      e.end = Time.parse(event["dates"][0]["end_date"])
-      e.source = "brownpapertickets"
-      e.tags = event["category"]
-      unless Event.find_matching(e).count > 0
-        puts "saving #{e.title} at #{e.start}"
-        e.save!
-        events_saved += 1
-      end
-      
-    end
-    puts "#{events_found} events in Seattle from brownpapertickets (#{events_saved} new)"
-  end
-=end
-  
   desc "get brown paper tickets events"
   task :brownpapertickets => :environment do
     puts "getting brownpaperticket events..."
@@ -213,19 +223,7 @@ namespace :events do
     puts "getting seattlerep events..."
     #scrape http://www.seattlerep.org/Plays/Calendar/
     Time.zone = "Pacific Time (US & Canada)"
-    baseDate = Time.now
-    venue = "Seattle Repertory Theatre"
-    res = Net::HTTP.get(URI.parse("http://www.seattlerep.org/Plays/Calendar/"))
-    XML::Error.set_handler(&XML::Error::QUIET_HANDLER)
-    p = XML::HTMLParser.string(res, :options => XML::HTMLParser::Options::RECOVER | XML::HTMLParser::Options::NONET | XML::HTMLParser::Options::NOERROR | XML::HTMLParser::Options::NOWARNING)
-    d = p.parse
-
-    #first we need to get all the plays that are showing (to get links)
-    plays = {}
-    nodes = d.find("id('nav')/li/ul/li/ul/li/a").each do |n|
-      plays[n.children.first.to_s] = "http://www.seattlerep.org"+n.attributes["href"]
-    end
-        
+    
     v = Venue.new
     v.name = "Seattle Repertory Theater"
     v.address = "155 Mercer Street"
@@ -240,38 +238,60 @@ namespace :events do
     v = Venue.find_and_merge(v)
     v.save!
 
-    #then we need to get all the showings
     events_found = 0
     events_saved = 0
-    nodes = d.find("id('calendarMonth')/tr/td[@class!='otherMonth']").each do |n|
-      #get the label which tells us the day
-      day = n.find_first("label").first.to_s.to_i
-      baseDate = Time.local(baseDate.year, baseDate.month, day)
-      #get each div that is not class "iconDesc"
-      n.find("div/a").each do |show|
-        next if show.parent.attributes['class'] && show.parent.attributes['class'] == 'iconDesc'
-        events_found += 1
-        #inside that is the title of the event followed by a <br /> element followed by the time (e.g. 2:00 PM 7:30 PM)
-        t = Time.parse(show.content)
-        t = Time.local(baseDate.year, baseDate.month, baseDate.day, t.hour, t.min)
-        e = Event.new
-        e.image = ""
-        e.title = show.children[0].to_s
-        e.url = plays[e.title] || show.attributes["href"]
-        e.venue_name = venue
 
-        e.venue = v
+    #if you want a different month this is what you need to switch
+    [Time.now, Time.now.advance(:months => 1), Time.now.advance(:months => 2)].each do |baseDate|
+      venue = "Seattle Repertory Theatre"
+      res = Net::HTTP.get(URI.parse("http://www.seattlerep.org/Plays/Calendar/default.aspx?m=#{baseDate.month}&y=#{baseDate.year}"))
+      XML::Error.set_handler(&XML::Error::QUIET_HANDLER)
+      p = XML::HTMLParser.string(res, :options => XML::HTMLParser::Options::RECOVER | XML::HTMLParser::Options::NONET | XML::HTMLParser::Options::NOERROR | XML::HTMLParser::Options::NOWARNING)
+      d = p.parse
 
-        e.start = t
-        e.end = t.advance(:hours => 2)
-        e.source = "seattlerep"
-        #TODO: need a better scheme for seattlerep source ids
-        e.source_id = e.url + "|" + t.to_s
-        e.tags = "Performing Arts"
-        unless Event.find_matching(e).count > 0
-          puts "saving #{e.title} at #{e.start}"
-          e.save!
-          events_saved += 1
+      #first we need to get all the plays that are showing (to get links)
+      plays = {}
+      nodes = d.find("id('nav')/li/ul/li/ul/li/a").each do |n|
+        plays[n.children.first.to_s] = "http://www.seattlerep.org"+n.attributes["href"]
+      end
+          
+
+      #then we need to get all the showings
+      nodes = d.find("id('calendarMonth')/tr/td[@class!='otherMonth']").each do |n|
+        #get the label which tells us the day
+        day = n.find_first("label").first.to_s.to_i
+        baseDate = Time.local(baseDate.year, baseDate.month, day)
+        #get each div that is not class "iconDesc"
+        n.find("div/a").each do |show|
+          next if show.parent.attributes['class'] && show.parent.attributes['class'] == 'iconDesc'
+          events_found += 1
+          #inside that is the title of the event followed by a <br /> element followed by the time (e.g. 2:00 PM 7:30 PM)
+          begin
+            t = Time.parse(show.content)
+          rescue ArgumentError => exception
+            puts "error parsing #{show.content} for time, skipping..."
+            next
+          end
+          t = Time.local(baseDate.year, baseDate.month, baseDate.day, t.hour, t.min)
+          e = Event.new
+          e.image = ""
+          e.title = show.children[0].to_s
+          e.url = plays[e.title] || show.attributes["href"]
+          e.venue_name = venue
+
+          e.venue = v
+
+          e.start = t
+          e.end = t.advance(:hours => 2)
+          e.source = "seattlerep"
+          #TODO: need a better scheme for seattlerep source ids
+          e.source_id = e.url + "|" + t.to_s
+          e.tags = "Performing Arts,Theater"
+          unless Event.find_matching(e).count > 0
+            puts "saving #{e.title} at #{e.start}"
+            e.save!
+            events_saved += 1
+          end
         end
       end
     end
@@ -283,7 +303,6 @@ namespace :events do
     puts "getting fifthave events..."
     #scrape http://www.seattlerep.org/Plays/Calendar/
     Time.zone = "Pacific Time (US & Canada)"
-    baseDate = Time.now
     venue = "5th Avenue Theater"
     v = Venue.new
     v.name = "5th Avenue Theater"
@@ -309,40 +328,44 @@ namespace :events do
     nodes = d.find("id('sidenav')/ul/li/ul/li/a").each do |n|
       plays[n.children.first.to_s] = "http://www.5thavenue.org"+n.attributes["href"]
     end
-
-    #then we need to get all the showing
-    res = Net::HTTP.get(URI.parse("http://www.5thavenue.org/calendar/"))
-    p = XML::HTMLParser.string(res, :options => XML::HTMLParser::Options::RECOVER | XML::HTMLParser::Options::NONET | XML::HTMLParser::Options::NOERROR | XML::HTMLParser::Options::NOWARNING)
-    d = p.parse
-
+      
     events_found = 0
     events_saved = 0
-    nodes = d.find("id('calendarMonth')/tr/td[@class!='otherMonth']/dl").each do |n|
-      #get the label which tells us the day
-      day = n.find_first("dt").first.to_s.to_i
-      baseDate = Time.local(baseDate.year, baseDate.month, day)
-      #get each div that is not class "iconDesc"
-      n.find("dd/a[not(@class)]").each do |show|
-        events_found += 1
-        #inside that is the title of the event followed by a <br /> element followed by the time (e.g. 2:00 PM 7:30 PM)
-        t = Time.parse(show.children[0].to_s)
-        t = Time.local(baseDate.year, baseDate.month, baseDate.day, t.hour, t.min)
-        e = Event.new
-        e.image = ""
-        e.title = show.children[2].inner_xml.to_s
-        e.url = plays[e.title] || show.attributes["href"]
-        e.venue_name = venue
-        e.venue
-        e.start = t
-        e.end = t
-        e.source = "fifthave"
-        #TODO: need a better scheme for fifthave source ids
-        e.source_id = e.url + t.to_s
-        e.tags = "Performing Arts"
-        unless Event.find_matching(e).count > 0
-          puts "saving #{e.title} at #{e.start}"
-          e.save!
-          events_saved += 1
+    
+    #TODO: if you want a different month's events, change this...
+    [Time.now, Time.now.advance(:months => 1), Time.now.advance(:months => 2)].each do |baseDate|
+      #then we need to get all the showing
+      res = Net::HTTP.get(URI.parse("http://www.5thavenue.org/calendar/Default.aspx?m=#{baseDate.month}&y=#{baseDate.year}"))
+      p = XML::HTMLParser.string(res, :options => XML::HTMLParser::Options::RECOVER | XML::HTMLParser::Options::NONET | XML::HTMLParser::Options::NOERROR | XML::HTMLParser::Options::NOWARNING)
+      d = p.parse
+
+      nodes = d.find("id('calendarMonth')/tr/td[@class!='otherMonth']/dl").each do |n|
+        #get the label which tells us the day
+        day = n.find_first("dt").first.to_s.to_i
+        baseDate = Time.local(baseDate.year, baseDate.month, day)
+        #get each div that is not class "iconDesc"
+        n.find("dd/a[not(@class)]").each do |show|
+          events_found += 1
+          #inside that is the title of the event followed by a <br /> element followed by the time (e.g. 2:00 PM 7:30 PM)
+          t = Time.parse(show.children[0].to_s)
+          t = Time.local(baseDate.year, baseDate.month, baseDate.day, t.hour, t.min)
+          e = Event.new
+          e.image = ""
+          e.title = show.children[2].inner_xml.to_s
+          e.url = plays[e.title] || show.attributes["href"]
+          e.venue_name = venue
+          e.venue
+          e.start = t
+          e.end = t
+          e.source = "fifthave"
+          #TODO: need a better scheme for fifthave source ids
+          e.source_id = e.url + t.to_s
+          e.tags = "Performing Arts,Theater"
+          unless Event.find_matching(e).count > 0
+            puts "saving #{e.title} at #{e.start}"
+            e.save!
+            events_saved += 1
+          end
         end
       end
     end
@@ -356,81 +379,83 @@ namespace :events do
     events_found = 0
     events_saved = 0
     Time.zone = "Pacific Time (US & Canada)"
-    t = Time.now
-    #res = Net::HTTP.get(URI.parse("http://www.seattleweekly.com/events/search/category:%5B293276%5D/date:#{t.year}-#{t.month}-#{t.day}/perPage:100/"))
-    res = Net::HTTP.get(URI.parse("http://www.seattleweekly.com/events/search/date:#{t.year}-#{t.month}-#{t.day}/perPage:500/"))
-    XML::Error.set_handler(&XML::Error::QUIET_HANDLER)
-    p = XML::HTMLParser.string(res, :options => XML::HTMLParser::Options::RECOVER | XML::HTMLParser::Options::NONET | XML::HTMLParser::Options::NOERROR | XML::HTMLParser::Options::NOWARNING)
-    d = p.parse
-    nodes = d.find("//div[@class='widget']//table/tr/td[@class='upper']")
-    nodes.each do |n|
-      e = Event.new
-      e.image = ""
-      e.title = n.find_first("h3/a").children[0].to_s.strip
-      e.url = "http://www.seattleweekly.com"+n.find_first("h3/a").attributes["href"]
-      e.venue_name = n.find_first("h4/a").children.first.to_s.strip
-      e.source = "seattleweekly"
-      #TODO: need a better source id for seattle weekly events
-      #
-      eS = Time.new(t.year, t.month, t.day, 10, 0, 0)
-      eE = eS.advance(:hours => 2)
-      #TODO: do we really want to skip all daily events?
-      if n.find_first("h4").children[2].to_s.index("Daily")
-        events_skipped += 1
-        next
-      end
-
-      vnode = n.find_first("h4/a")
-      v = Venue.where(:source => "seattleweekly", :source_id => vnode.attributes["href"]).first
-      unless v
-        vres = Net::HTTP.get(URI.parse("http://www.seattleweekly.com"+vnode.attributes["href"]))
-        vp = XML::HTMLParser.string(vres, :options => XML::HTMLParser::Options::RECOVER | XML::HTMLParser::Options::NONET | XML::HTMLParser::Options::NOERROR | XML::HTMLParser::Options::NOWARNING)
-        vd = vp.parse
-        vcard = vd.find_first("//div[@class='vcard']")
-
-        v = Venue.new
-        v.name = vcard.find_first("h1/a").content.strip
-        v.source = "seattleweekly"
-        v.source_id = vnode.attributes["href"]
-        v.address = vcard.find_first("div[@class='address']/span[@class='adr']/span[@class='street-address']").content.strip
-        v.city = vcard.find_first("div[@class='address']/span[@class='adr']/span[@class='locality']").content.strip
-        v.state = vcard.find_first("div[@class='address']/span[@class='adr']/span[@class='region']").content.strip
-        v.zipcode = vcard.find_first("div[@class='address']/span[@class='adr']/span[@class='postal-code']").content.strip
-        v.phone = vcard.find_first("div[@class='address']/span[@class='tel']").content.strip
-        v.lat = vcard.find_first("span[@class='geo']/span[@class='latitude']/span").attributes["title"].strip.to_f
-        v.lat = vcard.find_first("span[@class='geo']/span[@class='longitude']/span").attributes["title"].strip.to_f
-        v.url = "http://www.seattleweekly.com"+vnode.attributes["href"] 
-        v = Venue.find_and_merge(v)
-        v.save!
-      end
-      e.venue = v
-
-      events_found += 1
-      begin
-        timeStrs = n.find_first("h4").children[2].to_s.split(" ").last.split("-")
-        t2 = Time.parse(timeStrs[0])
-        eS = Time.new(t.year, t.month, t.day, t2.hour, t2.min, 0)
+    #TODO: to get events for a different day, change this value
+    times = (0..6).collect { |i| Time.now.advance(:days => i) }
+    times.each do |t|
+      res = Net::HTTP.get(URI.parse("http://www.seattleweekly.com/events/search/date:#{t.year}-#{t.month}-#{t.day}/perPage:500/"))
+      XML::Error.set_handler(&XML::Error::QUIET_HANDLER)
+      p = XML::HTMLParser.string(res, :options => XML::HTMLParser::Options::RECOVER | XML::HTMLParser::Options::NONET | XML::HTMLParser::Options::NOERROR | XML::HTMLParser::Options::NOWARNING)
+      d = p.parse
+      nodes = d.find("//div[@class='widget']//table/tr/td[@class='upper']")
+      nodes.each do |n|
+        e = Event.new
+        e.image = ""
+        e.title = n.find_first("h3/a").children[0].to_s.strip
+        e.url = "http://www.seattleweekly.com"+n.find_first("h3/a").attributes["href"]
+        e.venue_name = n.find_first("h4/a").children.first.to_s.strip
+        e.source = "seattleweekly"
+        #TODO: need a better source id for seattle weekly events
+        #
+        eS = Time.new(t.year, t.month, t.day, 10, 0, 0)
         eE = eS.advance(:hours => 2)
-        if(timeStrs.size > 1)
-          t2 = Time.parse(timeStrs[1])
-          eE = Time.new(t.year, t.month, t.day, t2.hour, t2.min)
+        #TODO: do we really want to skip all daily events?
+        if n.find_first("h4").children[2].to_s.index("Daily")
+          events_skipped += 1
+          next
         end
-      rescue ArgumentError => exception
-      end
-      e.source_id = e.url + eS.to_s
-      e.start = eS
-      e.end = eE
-      tagNodes = n.parent.next.find("td[@class='grid_hdr second']/a")
-      tagNodes = n.parent.next.next.find("td[@class='grid_hdr second']/a") unless tagNodes.size > 0
-      tags = []
-      tagNodes.each do |tag|
-        tags << tag.first.to_s.strip
-      end
-      e.tags = tags.join(", ")[0..254]
-      unless Event.find_matching(e).count > 0
-        puts "saving #{e.title} at #{e.start}"
-        e.save!
-        events_saved += 1
+
+        vnode = n.find_first("h4/a")
+        v = Venue.where(:source => "seattleweekly", :source_id => vnode.attributes["href"]).first
+        unless v
+          vres = Net::HTTP.get(URI.parse("http://www.seattleweekly.com"+vnode.attributes["href"]))
+          vp = XML::HTMLParser.string(vres, :options => XML::HTMLParser::Options::RECOVER | XML::HTMLParser::Options::NONET | XML::HTMLParser::Options::NOERROR | XML::HTMLParser::Options::NOWARNING)
+          vd = vp.parse
+          vcard = vd.find_first("//div[@class='vcard']")
+
+          v = Venue.new
+          v.name = vcard.find_first("h1/a").content.strip
+          v.source = "seattleweekly"
+          v.source_id = vnode.attributes["href"]
+          v.address = vcard.find_first("div[@class='address']/span[@class='adr']/span[@class='street-address']").content.strip
+          v.city = vcard.find_first("div[@class='address']/span[@class='adr']/span[@class='locality']").content.strip
+          v.state = vcard.find_first("div[@class='address']/span[@class='adr']/span[@class='region']").content.strip
+          v.zipcode = vcard.find_first("div[@class='address']/span[@class='adr']/span[@class='postal-code']").content.strip
+          v.phone = vcard.find_first("div[@class='address']/span[@class='tel']").content.strip
+          v.lat = vcard.find_first("span[@class='geo']/span[@class='latitude']/span").attributes["title"].strip.to_f
+          v.lat = vcard.find_first("span[@class='geo']/span[@class='longitude']/span").attributes["title"].strip.to_f
+          v.url = "http://www.seattleweekly.com"+vnode.attributes["href"] 
+          v = Venue.find_and_merge(v)
+          v.save!
+        end
+        e.venue = v
+
+        events_found += 1
+        begin
+          timeStrs = n.find_first("h4").children[2].to_s.split(" ").last.split("-")
+          t2 = Time.parse(timeStrs[0])
+          eS = Time.new(t.year, t.month, t.day, t2.hour, t2.min, 0)
+          eE = eS.advance(:hours => 2)
+          if(timeStrs.size > 1)
+            t2 = Time.parse(timeStrs[1])
+            eE = Time.new(t.year, t.month, t.day, t2.hour, t2.min)
+          end
+        rescue ArgumentError => exception
+        end
+        e.source_id = e.url + eS.to_s
+        e.start = eS
+        e.end = eE
+        tagNodes = n.parent.next.find("td[@class='grid_hdr second']/a")
+        tagNodes = n.parent.next.next.find("td[@class='grid_hdr second']/a") unless tagNodes.size > 0
+        tags = []
+        tagNodes.each do |tag|
+          tags << tag.first.to_s.strip
+        end
+        e.tags = tags.join(", ")[0..254]
+        unless Event.find_matching(e).count > 0
+          puts "saving #{e.title} at #{e.start}"
+          e.save!
+          events_saved += 1
+        end
       end
     end
     puts "#{events_found} events in Seattle from seattleweekly (#{events_saved} new, #{events_skipped} skipped)"
@@ -443,62 +468,65 @@ namespace :events do
     events_found = 0
     events_saved = 0
     Time.zone = "Pacific Time (US & Canada)"
-    t = Time.now
-    res = Net::HTTP.get(URI.parse("http://www.kexp.org/events/clubcalendar.asp?count=0"))
-    XML::Error.set_handler(&XML::Error::QUIET_HANDLER)
-    p = XML::HTMLParser.string(res, :options => XML::HTMLParser::Options::RECOVER | XML::HTMLParser::Options::NONET | XML::HTMLParser::Options::NOERROR | XML::HTMLParser::Options::NOWARNING)
-    d = p.parse
-    nodes = d.find("/html/body/table/tr/td/table/tr/td/table/tr/td/table")[1].find("tr")
-    #find("td")[1].content.strip.split(",").collect { |s| s.gsub(/\([^)]*\)/, "").strip }
-    nodes.each do |n|
-      events_found += 1
-      parts = n.find("td")
-      bands = parts[1].content.strip
-      e = Event.new
-      e.image = ""
-      e.title = bands
-      e.url = "http://www.kexp.org/events/"+parts[0].find_first("a").attributes["href"]
-      e.venue_name = parts[0].content.strip.titlecase
+    #TODO: to get events for a different day from today, change this value (up to 7 days ahead, or quite far in the past)
+    times = (0..6).collect { |i| Time.now.advance(:days => i) }
+    times.each do |t|
+      res = Net::HTTP.get(URI.parse("http://www.kexp.org/events/clubcalendar.asp?count=#{t.day - Time.now.day}"))
+      XML::Error.set_handler(&XML::Error::QUIET_HANDLER)
+      p = XML::HTMLParser.string(res, :options => XML::HTMLParser::Options::RECOVER | XML::HTMLParser::Options::NONET | XML::HTMLParser::Options::NOERROR | XML::HTMLParser::Options::NOWARNING)
+      d = p.parse
+      nodes = d.find("/html/body/table/tr/td/table/tr/td/table/tr/td/table")[1].find("tr")
+      #find("td")[1].content.strip.split(",").collect { |s| s.gsub(/\([^)]*\)/, "").strip }
+      nodes.each do |n|
+        events_found += 1
+        parts = n.find("td")
+        bands = parts[1].content.strip
+        e = Event.new
+        e.image = ""
+        e.title = bands
+        e.url = "http://www.kexp.org/events/"+parts[0].find_first("a").attributes["href"]
+        e.venue_name = parts[0].content.strip.titlecase
 
-      source_id = CGI::parse(URI.parse(parts[0].find_first("a").attributes["href"]).query)["ClubID"]
-     
-      v = Venue.where(:source => "kexp", :source_id => source_id).first
-      unless v
-        vs = Venue.where(:name => e.venue_name)
-        if(vs.count == 1)
-          v = vs.first
-        else
-          vres = Net::HTTP.get(URI.parse(e.url))
-          vp = XML::HTMLParser.string(vres, :options => XML::HTMLParser::Options::RECOVER | XML::HTMLParser::Options::NONET | XML::HTMLParser::Options::NOERROR | XML::HTMLParser::Options::NOWARNING)
-          vd = vp.parse
-          vcard = vd.find_first("//div[@class='vcard']")
-          
-          v = Venue.new
-          v.name = e.venue_name
-          v.address = vd.find_first("//span[@class='header']").parent.children[3].content.strip
-          v.city = "Seattle"
-          v.state = "WA"
-          v.phone = vd.find_first("//span[@class='header']").parent.children[5].content.strip
-          v.url = e.url
-          v.source = "kexp"
-          v.source_id = source_id
+        source_id = CGI::parse(URI.parse(parts[0].find_first("a").attributes["href"]).query)["ClubID"]
+       
+        v = Venue.where(:source => "kexp", :source_id => source_id).first
+        unless v
+          vs = Venue.where(:name => e.venue_name)
+          if(vs.count == 1)
+            v = vs.first
+          else
+            vres = Net::HTTP.get(URI.parse(e.url))
+            vp = XML::HTMLParser.string(vres, :options => XML::HTMLParser::Options::RECOVER | XML::HTMLParser::Options::NONET | XML::HTMLParser::Options::NOERROR | XML::HTMLParser::Options::NOWARNING)
+            vd = vp.parse
+            vcard = vd.find_first("//div[@class='vcard']")
+            
+            v = Venue.new
+            v.name = e.venue_name
+            v.address = vd.find_first("//span[@class='header']").parent.children[3].content.strip
+            v.city = "Seattle"
+            v.state = "WA"
+            v.phone = vd.find_first("//span[@class='header']").parent.children[5].content.strip
+            v.url = e.url
+            v.source = "kexp"
+            v.source_id = source_id
 
-          v = Venue.find_and_merge(v)
-          v.save!
+            v = Venue.find_and_merge(v)
+            v.save!
+          end
         end
-      end
 
-      e.venue = v
-      e.source = "kexp"
-      e.start = Time.new(t.year, t.month, t.day, 19, 0, 0)
-      #TODO: need a better scheme for kexp source ids
-      e.source_id = e.url + e.start.to_s
-      e.end = e.start.advance(:hours => 4)
-      e.tags = "music"
-      unless Event.find_matching(e).count > 0
-        puts "saving #{e.title} at #{e.start}"
-        e.save!
-        events_saved += 1
+        e.venue = v
+        e.source = "kexp"
+        e.start = Time.new(t.year, t.month, t.day, 19, 0, 0)
+        #TODO: need a better scheme for kexp source ids
+        e.source_id = e.url + e.start.to_s
+        e.end = e.start.advance(:hours => 4)
+        e.tags = "music"
+        unless Event.find_matching(e).count > 0
+          puts "saving #{e.title} at #{e.start}"
+          e.save!
+          events_saved += 1
+        end
       end
     end
     puts "#{events_found} events in Seattle kexp (#{events_saved} new)"

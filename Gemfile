@@ -11,6 +11,7 @@ gem 'libxml-ruby'
 gem 'icalendar'
 gem 'foursquare-api'
 gem 'json'
+gem 'amatch'
 
 # Use unicorn as the web server
 # gem 'unicorn'
