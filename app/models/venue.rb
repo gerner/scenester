@@ -7,6 +7,7 @@ class Venue < ActiveRecord::Base
   def self.find_and_merge(v)
     v_other = nil
     v_other ||= Venue.where(:source => v.source, :source_id => v.source_id).first if v.source && v.source_id
+    puts "looking for #{v.address}, #{v.city}, #{v.name}"
     v_other ||= Venue.where(:address => v.address, :city => v.city, :name => v.name).first if v.address && v.city && v.name
     v_other ||= Venue.where(:name => v.name).first
     v_other ||= v
