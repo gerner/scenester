@@ -353,6 +353,7 @@ namespace :events do
           e.image = ""
           e.title = show.children[2].inner_xml.to_s
           e.url = plays[e.title] || show.attributes["href"]
+          next unless e.url
           e.venue_name = venue
           e.venue
           e.start = t
