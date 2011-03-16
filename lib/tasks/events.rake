@@ -383,7 +383,7 @@ namespace :events do
     #TODO: to get events for a different day, change this value
     times = (0..6).collect { |i| Time.now.advance(:days => i) }
     times.each do |t|
-      res = Net::HTTP.get(URI.parse("http://www.seattleweekly.com/events/search/date:#{t.year}-#{t.month}-#{t.day}/perPage:500/"))
+      res = Iconv::iconv("UTF-8", "ISO8859-1", Net::HTTP.get(URI.parse("http://www.seattleweekly.com/events/search/date:#{t.year}-#{t.month}-#{t.day}/perPage:500/"))).first
       XML::Error.set_handler(&XML::Error::QUIET_HANDLER)
       p = XML::HTMLParser.string(res, :options => XML::HTMLParser::Options::RECOVER | XML::HTMLParser::Options::NONET | XML::HTMLParser::Options::NOERROR | XML::HTMLParser::Options::NOWARNING)
       d = p.parse
@@ -408,7 +408,7 @@ namespace :events do
         vnode = n.find_first("h4/a")
         v = Venue.where(:source => "seattleweekly", :source_id => vnode.attributes["href"]).first
         unless v
-          vres = Net::HTTP.get(URI.parse("http://www.seattleweekly.com"+vnode.attributes["href"]))
+          vres = Iconv::iconv("UTF-8", "ISO8859-1", Net::HTTP.get(URI.parse("http://www.seattleweekly.com"+vnode.attributes["href"]))).first
           vp = XML::HTMLParser.string(vres, :options => XML::HTMLParser::Options::RECOVER | XML::HTMLParser::Options::NONET | XML::HTMLParser::Options::NOERROR | XML::HTMLParser::Options::NOWARNING)
           vd = vp.parse
           vcard = vd.find_first("//div[@class='vcard']")
