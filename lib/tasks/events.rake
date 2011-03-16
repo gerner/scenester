@@ -44,12 +44,12 @@ namespace :events do
         #output likely duplicates
         score = (title_exact + title_similarity + url_matches + source_matches + start_diff + venue_exact + venue_similarity)/7.0
         #puts "#{score}"
-        #if (score > 0.3 && title_exact < 1)
-        #  puts "#{event.id} and #{candidate.id} seem to be duplicates with score:\n\t#{score}: #{title_similarity} #{venue_similarity} #{url_matches} #{source_matches} #{start_diff}"
-        #end
-        if (rand < 0.1)
-          puts "#{event.title.gsub(","," ")},#{candidate.title.gsub(","," ")},#{title_exact},#{title_similarity},#{venue_exact},#{venue_similarity},#{url_matches},#{source_matches},#{start_diff}"
+        if (score > 0.3 && title_exact < 1)
+          puts "#{score} #{event.id} and #{candidate.id} score:|#{score}: #{title_similarity} #{venue_similarity} #{url_matches} #{source_matches} #{start_diff}|\t#{event.title}|\t#{candidate.title}"
         end
+        #if (rand < 0.1)
+        #  puts "#{event.title.gsub(","," ")},#{candidate.title.gsub(","," ")},#{title_exact},#{title_similarity},#{venue_exact},#{venue_similarity},#{url_matches},#{source_matches},#{start_diff}"
+        #end
       end
     end
   end
@@ -531,6 +531,11 @@ namespace :events do
       end
     end
     puts "#{events_found} events in Seattle kexp (#{events_saved} new)"
+  end
+
+  desc "get events from Seattle Tech Calendar"
+  task :seattletechcalendar => :environment do
+    "http://www.google.com/calendar/ical/seattletechcalendar.com_9ko2jk3gdtn92f71t3bicm2das%40group.calendar.google.com/public/basic.ics"
   end
 end
 
