@@ -80,7 +80,7 @@ class Event < ActiveRecord::Base
           values << op[1]
         end
       else
-        cluases << "lower(title) LIKE ?"
+        clauses << "lower(title) LIKE ?"
         values << op[1]
       end
     end
@@ -105,5 +105,39 @@ class Event < ActiveRecord::Base
     else
       title
     end
+  end
+
+  def similarity(candidate)
+    title_similarity  = title.levenshtein_similar(candidate.title)
+    venue_exact = venue_id == candidate.venue_id ? 1 : 0
+    #venue similarity
+    if venue_id == candidate.venue_id
+      venue_similarity = 1
+    elsif venue && candidate.venue
+      venue_similarity = venue.name.levenshtein_similar(candidate.venue.name)
+    else
+      venue_similarity = 0
+    end
+    # url matches?
+    url_matches = url == candidate.url ? 1 : 0
+    # source matches?
+    source_matches = source == candidate.source ? 0 : 1
+    # difference squared in start times
+    start_diff = (start - candidate.start) ** 2.0
+
+    1.09 * title_similarity  +  0.2619 * venue_exact  +  -0.03276 * venue_similarity  +  -0.1249 * url_matches  +  0.00764 * source_matches  +  -0.00000000001425 * start_diff  +  -0.0890041
+  end
+
+  def is_duplicate_of(candidate)
+    similarity(candidate) > 0.307741
+  end
+
+  def duplicates
+    duplicates = []
+    candidates = Event.where("id <> ? AND start > ? AND start < ?", id, start.advance(:days => -1), start.advance(:days => 1))
+    candidates.each do |candidate|
+      duplicates << candidate if is_duplicate_of(candidate)
+    end
+    return duplicates
   end
 end
