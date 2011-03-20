@@ -57,7 +57,7 @@ class Event < ActiveRecord::Base
     #split query up into tokens
     parts = q.split
     #search over title, use tags operator to search over tags
-    opts = options.merge({:clauses => [], :values => []})
+    opts = {:clauses => [], :values => []}.merge(options)
     clauses = opts[:clauses]
     values = opts[:values]
     parts.each do |part|
