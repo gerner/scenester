@@ -38,18 +38,19 @@ namespace :events do
         # url matches?
         url_matches = event.url == candidate.url ? 1 : 0
         # source matches?
-        source_matches = event.source == candidate.source ? 1 : 0
+        source_matches = event.source == candidate.source ? 0 : 1
         # difference squared in start times
-        start_diff = ((event.start - candidate.start) ** 2.0) / 29859840000.0
+        start_diff = 1 - (((event.start - candidate.start) ** 2.0) / 29859840000.0)
         #output likely duplicates
         score = (title_exact + title_similarity + url_matches + source_matches + start_diff + venue_exact + venue_similarity)/7.0
         #puts "#{score}"
         if (score > 0.3 && title_exact < 1)
           puts "#{score} #{event.id} and #{candidate.id} score:|#{score}: #{title_similarity} #{venue_similarity} #{url_matches} #{source_matches} #{start_diff}|\t#{event.title}|\t#{candidate.title}"
         end
-        #if (rand < 0.1)
-        #  puts "#{event.title.gsub(","," ")},#{candidate.title.gsub(","," ")},#{title_exact},#{title_similarity},#{venue_exact},#{venue_similarity},#{url_matches},#{source_matches},#{start_diff}"
-        #end
+        #if (score > 0.5)
+#        if (rand > 0.999)
+#          puts "#{event.title.gsub(","," ")},#{candidate.title.gsub(","," ")},#{title_exact},#{title_similarity},#{venue_exact},#{venue_similarity},#{url_matches},#{source_matches},#{start_diff}"
+#        end
       end
     end
   end
