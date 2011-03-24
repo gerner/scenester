@@ -10,7 +10,16 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20110305162217) do
+ActiveRecord::Schema.define(:version => 20110320170947) do
+
+  create_table "event_sources", :force => true do |t|
+    t.integer  "event_id"
+    t.string   "source"
+    t.string   "remote_id"
+    t.string   "url"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
 
   create_table "events", :force => true do |t|
     t.string   "image"

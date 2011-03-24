@@ -12,6 +12,7 @@ gem 'icalendar'
 gem 'foursquare-api'
 gem 'json'
 gem 'amatch'
+gem 'addressable'
 
 # Use unicorn as the web server
 # gem 'unicorn'

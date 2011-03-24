@@ -7,6 +7,7 @@ class Event < ActiveRecord::Base
   validates_presence_of :title
 
   belongs_to :venue
+  has_many :event_sources, :dependent => :destroy
 
   #-------------------
   # static methods
@@ -99,6 +100,14 @@ class Event < ActiveRecord::Base
     (self.start - Time.now).abs < 86400
   end
 
+  def safe_venue_name
+    if venue
+      venue.name
+    else
+      ""
+    end
+  end
+
   def title_with_venue
     if venue
       "#{title} @ #{venue.name}"
@@ -140,4 +149,5 @@ class Event < ActiveRecord::Base
     end
     return duplicates
   end
+
 end

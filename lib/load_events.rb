@@ -7,10 +7,15 @@ require 'iconv'
 require 'rubygems'
 require 'rmeetup'
 require 'xml'
+require 'addressable/uri'
 
 module LoadEvents
-  def self.logger
-    @logger ||= RAILS_DEFAULT_LOGGER || Logger.new(STDOUT)
+  def self.logger log = nil
+    if log
+      @logger = log
+    else
+      @logger ||= RAILS_DEFAULT_LOGGER || Logger.new(STDOUT)
+    end
   end
 
   def self.print_events
@@ -34,6 +39,24 @@ module LoadEvents
     return events_saved
   end
 
+  def self.save_new_event(e)
+    events_saved = 0
+    Event.transaction do
+      unless Event.find_matching(e).count > 0
+        self.logger.info "saving #{e.title} at #{e.start}"
+        e.save!
+        events_saved += 1
+
+        s = e.event_sources.build()
+        s.source = e.source
+        s.remote_id = e.source_id
+        s.url = e.url 
+        s.save!
+      end
+    end
+    return events_saved
+  end
+
   #get eventbrite events coming soon
   def self.load_eventbrite
     self.logger.info "getting eventbrite events..."
@@ -42,17 +65,19 @@ module LoadEvents
     events_saved = 0
     events_found = 0
     while more_events 
+      self.logger.info "getting a batch of eventbrite events"
       res = Net::HTTP.get(URI.parse("http://www.eventbrite.com/json/event_search?app_key=ZGI0YzliZjIzMTkx&city=Seattle&max=100&page=#{page_number}"))
       results = JSON.parse(res)
       break unless results["events"] && results["events"].size > 1
       page_number += 1
+      self.logger.info "processing a batch of eventbrite events"
       results["events"][1..results["events"].size-1].each do |event|
         event = event["event"]
         events_found += 1
         e = Event.new
         e.image = event["logo"]
         e.title = event["title"]
-        e.url = event["url"]
+        e.url = Addressable::URI.heuristic_parse(event["url"]).to_s
         e.venue_name = event["venue"]["name"]
 
         v = Venue.new
@@ -73,11 +98,8 @@ module LoadEvents
         e.tags = (event["category"] + ", " + event["tags"])[0..254]
         e.source = "eventbrite"
         e.source_id = event["id"].to_s
-        unless Event.find_matching(e).count > 0
-          self.logger.info "saving #{e.title} at #{e.start}"
-          e.save!
-          events_saved += 1
-        end
+
+        events_saved += self.save_new_event(e)
       end
     end
     self.logger.info "#{events_found} events in Seattle from eventbrite (#{events_saved} new)"
@@ -93,6 +115,7 @@ module LoadEvents
 
     results = RMeetup::Client.fetch(:events,{:zip => "98116"})
 
+    self.logger.info "getting meetup group info"
     group_ids = (results.collect { |event| event.group_id } ).join(",")
     
     group_results = RMeetup::Client.fetch(:groups, {:id => group_ids})
@@ -101,6 +124,7 @@ module LoadEvents
       groups[group.id.to_s] = group
     end
 
+    self.logger.info "processing meetup results"
     results.each do |event|
       events_found += 1
       e = Event.new
@@ -131,11 +155,8 @@ module LoadEvents
       group = groups[event.group_id]
       topics = group.topics.collect { |t| t["name"]}
       e.tags = Iconv.conv('utf-8', 'iso-8859-1', topics.join(","))[0..254]
-      unless Event.find_matching(e).count > 0
-        self.logger.info "#{e.title} at #{e.start}"
-        e.save!
-        events_saved += 1
-      end
+      
+      events_saved += self.save_new_event(e)
     end
     self.logger.info "#{events_found} events in Seattle from meetup (#{events_saved} new)"
     return events_saved
@@ -151,6 +172,7 @@ module LoadEvents
     p = XML::HTMLParser.string(res, :options => XML::HTMLParser::Options::RECOVER | XML::HTMLParser::Options::NONET | XML::HTMLParser::Options::NOERROR | XML::HTMLParser::Options::NOWARNING)
     d = p.parse
 
+    self.logger.info("processing brownpaperticket results")
     nodes = d.find('/html/body/bpt/event')
     nodes.each do |n|
       events_found += 1
@@ -177,11 +199,8 @@ module LoadEvents
       e.source = "brownpapertickets"
       e.source_id = n.find_first("e_id").content.strip
       e.tags = n.find_first("category").content.strip
-      unless Event.find_matching(e).count > 0
-        self.logger.info "saving #{e.title} at #{e.start}"
-        e.save!
-        events_saved += 1
-      end
+      
+      events_saved += self.save_new_event(e)
       
     end
     self.logger.info "#{events_found} events in Seattle from brownpapertickets (#{events_saved} new)"
@@ -214,11 +233,13 @@ module LoadEvents
     #if you want a different month this is what you need to switch
     [Time.now, Time.now.advance(:months => 1), Time.now.advance(:months => 2)].each do |baseDate|
       venue = "Seattle Repertory Theatre"
+      self.logger.info("getting a batch of seattlerep events")
       res = Net::HTTP.get(URI.parse("http://www.seattlerep.org/Plays/Calendar/default.aspx?m=#{baseDate.month}&y=#{baseDate.year}"))
       XML::Error.set_handler(&XML::Error::QUIET_HANDLER)
       p = XML::HTMLParser.string(res, :options => XML::HTMLParser::Options::RECOVER | XML::HTMLParser::Options::NONET | XML::HTMLParser::Options::NOERROR | XML::HTMLParser::Options::NOWARNING)
       d = p.parse
 
+      self.logger.info("processing a batch of seattlerep results")
       #first we need to get all the plays that are showing (to get links)
       plays = {}
       nodes = d.find("id('nav')/li/ul/li/ul/li/a").each do |n|
@@ -257,11 +278,8 @@ module LoadEvents
           #TODO: need a better scheme for seattlerep source ids
           e.source_id = e.url + "|" + t.to_s
           e.tags = "Performing Arts,Theater"
-          unless Event.find_matching(e).count > 0
-            self.logger.info "saving #{e.title} at #{e.start}"
-            e.save!
-            events_saved += 1
-          end
+          
+          events_saved += self.save_new_event(e)
         end
       end
     end
@@ -306,10 +324,12 @@ module LoadEvents
     #TODO: if you want a different month's events, change this...
     [Time.now, Time.now.advance(:months => 1), Time.now.advance(:months => 2)].each do |baseDate|
       #then we need to get all the showing
+      self.logger.info("getting a batch of fifthave events")
       res = Net::HTTP.get(URI.parse("http://www.5thavenue.org/calendar/Default.aspx?m=#{baseDate.month}&y=#{baseDate.year}"))
       p = XML::HTMLParser.string(res, :options => XML::HTMLParser::Options::RECOVER | XML::HTMLParser::Options::NONET | XML::HTMLParser::Options::NOERROR | XML::HTMLParser::Options::NOWARNING)
       d = p.parse
 
+      self.logger.info("processing a batch of fifthave results")
       nodes = d.find("id('calendarMonth')/tr/td[@class!='otherMonth']/dl").each do |n|
         #get the label which tells us the day
         day = n.find_first("dt").first.to_s.to_i
@@ -333,11 +353,8 @@ module LoadEvents
           #TODO: need a better scheme for fifthave source ids
           e.source_id = e.url + t.to_s
           e.tags = "Performing Arts,Theater"
-          unless Event.find_matching(e).count > 0
-            self.logger.info "saving #{e.title} at #{e.start}"
-            e.save!
-            events_saved += 1
-          end
+          
+          events_saved += self.save_new_event(e)
         end
       end
     end
@@ -355,10 +372,13 @@ module LoadEvents
     #TODO: to get events for a different day, change this value
     times = (0..6).collect { |i| Time.now.advance(:days => i) }
     times.each do |t|
+      self.logger.info("getting a batch of seattleweekly events")
       res = Iconv::iconv("UTF-8", "ISO8859-1", Net::HTTP.get(URI.parse("http://www.seattleweekly.com/events/search/date:#{t.year}-#{t.month}-#{t.day}/perPage:500/"))).first
       XML::Error.set_handler(&XML::Error::QUIET_HANDLER)
       p = XML::HTMLParser.string(res, :options => XML::HTMLParser::Options::RECOVER | XML::HTMLParser::Options::NONET | XML::HTMLParser::Options::NOERROR | XML::HTMLParser::Options::NOWARNING)
       d = p.parse
+
+      self.logger.info("processing a batch of seattleweekly results")
       nodes = d.find("//div[@class='widget']//table/tr/td[@class='upper']")
       nodes.each do |n|
         e = Event.new
@@ -380,6 +400,7 @@ module LoadEvents
         vnode = n.find_first("h4/a")
         v = Venue.where(:source => "seattleweekly", :source_id => vnode.attributes["href"]).first
         unless v
+          self.logger.info("fetching venue info")
           vres = Iconv::iconv("UTF-8", "ISO8859-1", Net::HTTP.get(URI.parse("http://www.seattleweekly.com"+vnode.attributes["href"]))).first
           vp = XML::HTMLParser.string(vres, :options => XML::HTMLParser::Options::RECOVER | XML::HTMLParser::Options::NONET | XML::HTMLParser::Options::NOERROR | XML::HTMLParser::Options::NOWARNING)
           vd = vp.parse
@@ -424,11 +445,8 @@ module LoadEvents
           tags << tag.first.to_s.strip
         end
         e.tags = tags.join(", ")[0..254]
-        unless Event.find_matching(e).count > 0
-          self.logger.info "saving #{e.title} at #{e.start}"
-          e.save!
-          events_saved += 1
-        end
+        
+        events_saved += self.save_new_event(e)
       end
     end
     self.logger.info "#{events_found} events in Seattle from seattleweekly (#{events_saved} new, #{events_skipped} skipped)"
@@ -445,10 +463,13 @@ module LoadEvents
     #TODO: to get events for a different day from today, change this value (up to 7 days ahead, or quite far in the past)
     times = (0..6).collect { |i| Time.now.advance(:days => i) }
     times.each do |t|
+      self.logger.info("getting a batch of kexp events")
       res = Net::HTTP.get(URI.parse("http://www.kexp.org/events/clubcalendar.asp?count=#{t.day - Time.now.day}"))
       XML::Error.set_handler(&XML::Error::QUIET_HANDLER)
       p = XML::HTMLParser.string(res, :options => XML::HTMLParser::Options::RECOVER | XML::HTMLParser::Options::NONET | XML::HTMLParser::Options::NOERROR | XML::HTMLParser::Options::NOWARNING)
       d = p.parse
+      
+      self.logger.info("processing a batch of kexp results")
       nodes = d.find("/html/body/table/tr/td/table/tr/td/table/tr/td/table")[1].find("tr")
       #find("td")[1].content.strip.split(",").collect { |s| s.gsub(/\([^)]*\)/, "").strip }
       nodes.each do |n|
@@ -465,6 +486,7 @@ module LoadEvents
        
         v = Venue.where(:source => "kexp", :source_id => source_id).first
         unless v
+          self.logger.info("fetching venue info")
           vs = Venue.where(:name => e.venue_name)
           if(vs.count == 1)
             v = vs.first
@@ -496,11 +518,8 @@ module LoadEvents
         e.source_id = e.url + e.start.to_s
         e.end = e.start.advance(:hours => 4)
         e.tags = "music"
-        unless Event.find_matching(e).count > 0
-          self.logger.info "saving #{e.title} at #{e.start}"
-          e.save!
-          events_saved += 1
-        end
+        
+        events_saved += self.save_new_event(e)
       end
     end
     self.logger.info "#{events_found} events in Seattle kexp (#{events_saved} new)"
@@ -509,7 +528,7 @@ module LoadEvents
 
   #get events from Seattle Tech Calendar
   def self.load_seattletechcalendar
-    "http://www.google.com/calendar/ical/seattletechcalendar.com_9ko2jk3gdtn92f71t3bicm2das%40group.calendar.google.com/public/basic.ics"
+    resp = Net::HTTP.get(URI.parse("http://www.google.com/calendar/ical/seattletechcalendar.com_9ko2jk3gdtn92f71t3bicm2das%40group.calendar.google.com/public/basic.ics"))
   end
 end
 

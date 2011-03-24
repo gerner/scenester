@@ -1,0 +1,13 @@
+# Read about fixtures at http://ar.rubyonrails.org/classes/Fixtures.html
+
+one:
+  event: 
+  source: MyString
+  remote_id: MyString
+  url: MyString
+
+two:
+  event: 
+  source: MyString
+  remote_id: MyString
+  url: MyString
