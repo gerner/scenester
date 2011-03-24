@@ -14,7 +14,7 @@
             <% else %>
               <%= link_to 'Learn More', event, :class => "button" %>
             <% end %>
-            <div class="tags"><%= event.tags %></div>
+            <div class="tags"><%= event.tags %><br /><%= add_to_google_calendar(event) %></div>
 		</div>
           <div class="divider-large" style="clear:both"></div>
 	</div>

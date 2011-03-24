@@ -1,22 +1,21 @@
+<div>
+  <!-- <div class="bread-crumbs"><a href="/">Home</a> &raquo; Today</div> -->
+<div class="bread-crumb-portfolio">
+    View: 
+    <a class="selected_bread" href="/events">Tonight</a>
+    <a href="/search?q=tag:music">Music</a>
+    <a href="/search?q=tag:music">Music</a>
+    <a href="/search?q=tag:arts">Art</a>
+    <a href="/search?q=tag:theater">Performing Arts</a>
+    <a href="/search?q=tag:tech">Tech & Sci</a>
+</div>
 
-	<div class="bread-crumbs"><a href="/">Home</a> &raquo; Today</div>
-	
-	<h1><%= @events.size %> events Today</h1>
-	
-	
-	<div class="bread-crumb-portfolio">
-		View: 
-		<a href="#">Music</a>
-		<a href="#">Art</a>
-		<a href="#">Food and Drink</a>
-		<a href="#">Performing Arts</a>
-        <a href="#">Tech & Sci</a>
-	</div>
-	
-	<br/>
+<br/>
 
+<h1>Today's events</h1>
 <%= render 'list' %>
 
 <br />
 
 <%= link_to 'New Event', new_event_path %>
+</div>

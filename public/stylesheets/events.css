@@ -1,5 +1,15 @@
+.event-source {float:right;  padding:0 0 0 22px; color: #7D7D7D;}
+.tags {float:right; font-size: 11px; color: #7D7D7D; text-align: right;}
 .event img {
 	width:209px;
 	height:auto;
 	max-height:300px;
 }
+
+#content img.gcalbtn {
+	height: auto;
+	width: auto;
+	border: none;
+	background: transparent;
+}
+

@@ -82,10 +82,11 @@ blockquote {font-style:italic; line-height:22px; font-size:14px; color:#626262; 
 #content .team-member img {border:none; padding:0px;}
 #content .team-member .alignleft {margin-right:15px;}
 #content .team-member .alignright {margin-left:15px;}
-.pagination {text-align:right; margin-bottom:15px;  color:#6f6f6f; font-size:11px;}
+.pagination {float:right; margin-bottom:15px;  color:#6f6f6f; font-size:11px;}
 .pagination a {color:#6f6f6f; padding:4px 8px; background-color:#e4e4e4; margin-right:1px; text-decoration:none; border:1px solid #cecece;}
 .pagination a:hover {background-color:#dadada;}
 .pagination a.selected, .pagination a.selected:hover {background-color:#686868; color:#fff; border:1px solid #686868;}
+.pagination em {padding:4px 8px; background-color:#686868; color:#fff; border:1px solid #686868; margin-right:1px;}
 .bread-crumb-portfolio { margin:22px 0 15px 0; color:#6f6f6f; font-size:13px;}
 .bread-crumb-portfolio a {font-size:11px; color:#6f6f6f; padding:5px 10px; background-color:#e4e4e4; margin-right:2px; border:1px solid #cecece; text-decoration:none;}
 .bread-crumb-portfolio a:hover {background-color:#dadada;}
@@ -245,6 +246,4 @@ ul#socialnetworking li.rss {background:url(../images/rss.png) 12px 5px no-repeat
 
 
 
-.event-source {float:right;  padding:0 0 0 22px; color: #7D7D7D;}
-.tags {float:right; font-size: 11px; color: #7D7D7D;}
 
