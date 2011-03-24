@@ -143,7 +143,7 @@ class Event < ActiveRecord::Base
 
   def duplicates
     duplicates = []
-    candidates = Event.where("id <> ? AND start > ? AND start < ?", id, start.advance(:days => -1), start.advance(:days => 1))
+    candidates = Event.where("id <> ? AND start > ? AND start < ?", id, start.advance(:days => -1), start.advance(:days => 1)).includes(:venue)
     candidates.each do |candidate|
       duplicates << candidate if is_duplicate_of(candidate)
     end
