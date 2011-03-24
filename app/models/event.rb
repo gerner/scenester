@@ -54,7 +54,7 @@ class Event < ActiveRecord::Base
     Event.where([whereClause] + whereValues)
   end
 
-  def self.search(q, options = {})
+  def self.search_conditions(q, options = {})
     #split query up into tokens
     parts = q.split
     #search over title, use tags operator to search over tags
@@ -85,7 +85,7 @@ class Event < ActiveRecord::Base
         values << op[1]
       end
     end
-    Event.where([clauses.join(" AND ")]+values)
+    return [clauses.join(" AND ")]+values
   end
 
   #-------------------

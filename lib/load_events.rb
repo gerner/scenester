@@ -130,7 +130,7 @@ module LoadEvents
       e = Event.new
       e.image = event.group_photo_url || event.photo_url
       e.title = Iconv.conv('utf-8', 'iso-8859-1', event.group_name + ":" + event.name)
-      e.url = event.event_url
+      e.url = Addressable::URI.heuristic_parse(event.event_url).to_s
       e.venue_name = Iconv.conv('utf-8', 'iso-8859-1', event.venue_name)
 
       v = Venue.new
@@ -179,7 +179,7 @@ module LoadEvents
       e = Event.new
       e.image = ""
       e.title = n.find_first("e_name").content.strip
-      e.url = n.find_first("e_web").content.strip
+      e.url = Addressable::URI.heuristic_parse(n.find_first("e_web").content.strip).to_s
       e.venue_name = n.find_first("e_venue").content.strip
 
       v = Venue.new
@@ -267,7 +267,7 @@ module LoadEvents
           e = Event.new
           e.image = ""
           e.title = show.children[0].to_s
-          e.url = plays[e.title] || show.attributes["href"]
+          e.url = plays[e.title] || "http://www.seattlerep.org"+show.attributes["href"]
           e.venue_name = venue
 
           e.venue = v
@@ -343,7 +343,7 @@ module LoadEvents
           e = Event.new
           e.image = ""
           e.title = show.children[2].inner_xml.to_s
-          e.url = plays[e.title] || show.attributes["href"]
+          e.url = plays[e.title] || "http://www.5thavenue.org"+show.attributes["href"]
           next unless e.url
           e.venue_name = venue
           e.venue
