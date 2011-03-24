@@ -8,7 +8,7 @@ xml.rss :version => "2.0" do
     for event in @events
       xml.item do
         xml.title event.title_with_venue
-        xml.description "#{event.start.strftime("%b %e %l:%M%P")} at #{event.venue.name}, #{event.venue.address}"
+        xml.description "#{event.start.strftime("%b %e %l:%M%P")}#{venue_name_address(event)}"
         xml.pubDate event.start.to_s(:rfc822)
         xml.link event.url
         xml.guid event.url
