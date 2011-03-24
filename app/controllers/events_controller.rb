@@ -49,7 +49,7 @@ class EventsController < ApplicationController
     checkins.each do |c|
       venue = c["venue"]["name"]
       t = Time.at(c["createdAt"])
-      e = Event.find_attending(venue, t).first
+      e = Event.find_attending(venue, t).includes(:venue).first
       @events << e if e
       #vtimes << {:venue => venue, :time => t}
     end
