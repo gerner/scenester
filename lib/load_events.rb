@@ -10,6 +10,14 @@ require 'xml'
 require 'addressable/uri'
 
 module LoadEvents
+  def self.sources
+    ["eventbrite",
+      "brownpapertickets",
+      "seattlerep",
+      "fifthave",
+      "seattleweekly",
+      "kexp"]
+  end
   def self.logger log = nil
     if log
       @logger = log
@@ -30,12 +38,9 @@ module LoadEvents
 
   def self.load_events
     events_saved = 0
-    events_saved += self.load_eventbrite
-    events_saved += self.load_brownpapertickets
-    events_saved += self.load_seattlerep
-    events_saved += self.load_fifthave
-    events_saved += self.load_seattleweekly
-    events_saved += self.load_kexp
+    self.sources.each do |source|
+      events_saved += self.send("load_"+source)
+    end
     return events_saved
   end
 
@@ -343,7 +348,11 @@ module LoadEvents
           e = Event.new
           e.image = ""
           e.title = show.children[2].inner_xml.to_s
-          e.url = plays[e.title] || "http://www.5thavenue.org"+show.attributes["href"]
+          if show.attributes["href"]
+            e.url = plays[e.title] || "http://www.5thavenue.org"+show.attributes["href"]
+          else
+            e.url = plays[e.title]
+          end
           next unless e.url
           e.venue_name = venue
           e.venue
