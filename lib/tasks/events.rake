@@ -46,7 +46,7 @@ namespace :events do
     events.each do |event|
       candidates.each do |candidate|
         next if event.id == candidate.id
-        next unless event.is_duplicate_of(candidate)
+        next rand < ratio 
         features = event.similarity_vector(candidate)
 
         out_line = "#{event.id},#{candidate.id},#{event.title_with_venue.gsub(/,/,"")},#{candidate.title_with_venue.gsub(/,/,"")}"
