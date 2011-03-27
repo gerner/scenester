@@ -14,45 +14,49 @@ namespace :events do
   desc "find duplicate events"
   task :duplicates => :environment do
     #get some events that we want to check
-    events = Event.where("start > ? AND start < ?", Time.now.advance(:days => -1), Time.now.advance(:days => 1))
-    candidates = Event.where("start > ? AND start < ?", Time.now.advance(:days => -1), Time.now.advance(:days => 1))
+    events = Event.where("start > ? AND start < ?", Time.now.advance(:days => -1), Time.now.advance(:days => 1)).includes(:venue)
+    candidates = Event.where("start > ? AND start < ?", Time.now.advance(:days => -2), Time.now.advance(:days => 2)).includes(:venue)
+    duplicates_found = 0
+    events_with_duplicates = 0
     events.each do |event|
-      #find candidate duplicates
-      candidates.each do |candidate|
-        next if event.id == candidate.id
-        #compute several similarity measures
-        # title exact match?
-        title_exact = event.title == candidate.title ? 1 : 0
-        # some similarity measure between titles
-        title_similarity  = event.title.levenshtein_similar(candidate.title)
-        #venue exact match?
-        venue_exact = event.venue_id == candidate.venue_id ? 1 : 0
-        #venue similarity
-        if event.venue_id == candidate.venue_id
-          venue_similarity = 1
-        elsif event.venue && candidate.venue
-          venue_similarity = event.venue.name.levenshtein_similar(candidate.venue.name)
-        else
-          venue_similarity = 0
+      duplicates = event.duplicates(:candidates => candidates)
+      unless duplicates.empty?
+        puts "#{event.id} #{event.title_with_venue} #{event.source} #{event.start.strftime("%e %l:%M%P")}"
+        duplicates.each do |duplicate|
+          puts "\t#{event.similarity(duplicate)} #{duplicate.id} #{duplicate.title_with_venue} #{duplicate.source} #{duplicate.start.strftime("%e %l:%M%P")}"
+        duplicates_found += 1
         end
-        # url matches?
-        url_matches = event.url == candidate.url ? 1 : 0
-        # source matches?
-        source_matches = event.source == candidate.source ? 0 : 1
-        # difference squared in start times
-        start_diff = 1 - (((event.start - candidate.start) ** 2.0) / 29859840000.0)
-        #output likely duplicates
-        score = (title_exact + title_similarity + url_matches + source_matches + start_diff + venue_exact + venue_similarity)/7.0
-        #puts "#{score}"
-        if (score > 0.3 && title_exact < 1)
-          puts "#{score} #{event.id} and #{candidate.id} score:|#{score}: #{title_similarity} #{venue_similarity} #{url_matches} #{source_matches} #{start_diff}|\t#{event.title}|\t#{candidate.title}"
-        end
-        #if (score > 0.5)
-#        if (rand > 0.999)
-#          puts "#{event.title.gsub(","," ")},#{candidate.title.gsub(","," ")},#{title_exact},#{title_similarity},#{venue_exact},#{venue_similarity},#{url_matches},#{source_matches},#{start_diff}"
-#        end
+        events_with_duplicates += 1
       end
     end
+    puts "#{events_with_duplicates} events with duplicates with #{duplicates_found} duplicates from #{events.size} events total"
+  end
+
+  task :pair_wise, :ratio, :needs => :environment do |t, args|
+    ratio = args[:ratio].to_f || 0.0
+    
+    unless ratio > 0.0 && ratio <= 1.0
+      puts "ratio must be in <0,1]"
+      next
+    end
+
+    events = Event.where("start > ? AND start < ?", Time.now.advance(:days => -1), Time.now.advance(:days => 1)).includes(:venue)
+    candidates = Event.where("start > ? AND start < ?", Time.now.advance(:days => -2), Time.now.advance(:days => 2)).includes(:venue)
+
+    events.each do |event|
+      candidates.each do |candidate|
+        next if event.id == candidate.id
+        next unless event.is_duplicate_of(candidate)
+        features = event.similarity_vector(candidate)
+
+        out_line = "#{event.id},#{candidate.id},#{event.title_with_venue.gsub(/,/,"")},#{candidate.title_with_venue.gsub(/,/,"")}"
+        features.each do |k,v|
+          out_line += ",#{v.to_s}"
+        end
+        puts out_line
+      end
+    end
+
   end
   
   desc "print events"
@@ -75,12 +79,14 @@ namespace :events do
     elsif source == "all"
       puts "loading all events"
       LoadEvents.load_events
-    elsif LoadEvents.method_names.index("load_"+source)
+    elsif LoadEvents.respond_to?("load_"+source)
       puts "loading events from #{source}"
       LoadEvents.send(("load_"+source).to_sym)
     else
       puts "unknown source \"#{source}\""
-      puts "#{LoadEvents.method_names}"
+      LoadEvents.sources.each do |s|
+        puts "\t#{s}"
+      end
     end
   end
 

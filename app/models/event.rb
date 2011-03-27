@@ -2,6 +2,15 @@ ATTEND_HOURS_BEFORE = 2
 ATTEND_HOURS_AFTER = 1
 QUERY_OPERATORS = ["source", "venue", "tag"]
 
+STOP_WORDS = Set.new ["the", "of"]
+
+def jaccard(a, b)
+  atoks = Set.new(a.downcase.split()).delete_if {|o| STOP_WORDS.include? o}
+  btoks = Set.new(b.downcase.split()).delete_if {|o| STOP_WORDS.include? o}
+  
+  atoks.intersection(btoks).size.to_f / atoks.union(btoks).size.to_f
+end
+
 class Event < ActiveRecord::Base
   validates_uniqueness_of :source_id, :scope => :source
   validates_presence_of :title
@@ -67,7 +76,7 @@ class Event < ActiveRecord::Base
       if(part.match(/[a-z]+:./) && QUERY_OPERATORS.index(op[0]))
         op[1] = CGI::unescape(op[1])
         if(op[0] == "source")
-          clauses << "source = ?"
+          clauses << "events.source = ?"
           values << op[1]
         elsif(op[0] == "venue")
           clauses << "venue_name LIKE ?"
@@ -116,7 +125,40 @@ class Event < ActiveRecord::Base
     end
   end
 
+  def duration
+    (self.end - start).abs
+  end
+
+  def similarity_vector(candidate)
+    features = {}
+
+    features[:title_dist] = title.levenshtein_similar(candidate.title)
+    features[:title_jaccard] = jaccard(title, candidate.title)
+    features[:venue_exact] = venue_id == candidate.venue_id ? 1 : 0
+    #venue similarity
+    if venue_id == candidate.venue_id
+      features[:venue_dist] = 1
+      features[:venue_jaccard] = 1
+    elsif venue && candidate.venue
+      features[:venue_dist] = venue.name.levenshtein_similar(candidate.venue.name)
+      features[:venue_jaccard] = jaccard(venue.name, candidate.venue.name)
+    else
+      features[:venue_dist] = 0
+      features[:venue_jaccard] = 0
+    end
+    # url matches?
+    features[:url_matches] = url == candidate.url ? 1 : 0
+    # source matches?
+    features[:source_matches] = source == candidate.source ? 0 : 1
+    # difference squared in start times
+    features[:start_se] = (start - candidate.start) ** 2.0
+    features[:duration_se] = (duration - candidate.duration) ** 2.0
+    
+    return features
+  end
+
   def similarity(candidate)
+=begin
     title_similarity  = title.levenshtein_similar(candidate.title)
     venue_exact = venue_id == candidate.venue_id ? 1 : 0
     #venue similarity
@@ -135,15 +177,62 @@ class Event < ActiveRecord::Base
     start_diff = (start - candidate.start) ** 2.0
 
     1.09 * title_similarity  +  0.2619 * venue_exact  +  -0.03276 * venue_similarity  +  -0.1249 * url_matches  +  0.00764 * source_matches  +  -0.00000000001425 * start_diff  +  -0.0890041
+=end
+    features = similarity_vector(candidate)
+    -0.09648*features[:title_dist]  +  0.03553*features[:title_jaccard]  +  -0.2125*features[:venue_exact]  +  0.108*features[:venue_dist]  +  0.6245*features[:venue_jaccard]  +  -0.4022*features[:url_matches]  +  0.1921*features[:source_matches]  +  -4.946*10**-12*features[:start_se]  +  -5.616*10**-14*features[:duration_se]  +  0.00396018
   end
 
   def is_duplicate_of(candidate)
-    similarity(candidate) > 0.307741
+    #id != candidate.id && similarity(candidate) > 0.307741
+    #id != candidate.id && similarity(candidate > 0.634310
+    features = similarity_vector(candidate)
+    if features[:source_matches] < 1
+      if features[:title_jaccard] < 0.25
+        if features[:venue_jaccard] < 0.5
+          return false
+        else
+          if features[:start_se] < 3.73248e+09
+            if features[:venue_exact] < 1
+              return false
+            else
+              return true
+            end
+          else
+            return false
+          end
+        end
+      else
+        return false
+      end
+    else
+      if features[:start_se] < 1.8792e+08
+        if features[:venue_jaccard] < 0.333333
+          if features[:title_jaccard] < 0.166667
+            return false
+          else
+            if features[:venue_dist] < 0.201389
+              if features[:title_dist] < 0.4
+                return true
+              else
+                return false
+              end
+            else
+              return true
+            end
+          end
+        else
+          return true
+        end
+      else
+        return false
+      end
+    end
   end
 
-  def duplicates
+  def duplicates(opts = {})
+    options = {}.merge(opts)
     duplicates = []
-    candidates = Event.where("id <> ? AND start > ? AND start < ?", id, start.advance(:days => -1), start.advance(:days => 1)).includes(:venue)
+    candidates = options[:candidates] || Event.where("id <> ? AND start > ? AND start < ?", id, start.advance(:days => -1), start.advance(:days => 1)).includes(:venue)
     candidates.each do |candidate|
       duplicates << candidate if is_duplicate_of(candidate)
     end
