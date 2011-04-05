@@ -74,7 +74,7 @@ class Event < ActiveRecord::Base
       #query operator
       op = part.split(":")
       if(part.match(/[a-z]+:./) && QUERY_OPERATORS.index(op[0]))
-        op[1] = CGI::unescape(op[1])
+        op[1] = CGI::unescape(op[1].downcase)
         if(op[0] == "source")
           clauses << "events.source = ?"
           values << op[1]
@@ -91,7 +91,7 @@ class Event < ActiveRecord::Base
         end
       else
         clauses << "lower(title) LIKE ?"
-        values << op[1]
+        values << "%#{part.downcase}%"
       end
     end
     return [clauses.join(" AND ")]+values
