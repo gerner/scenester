@@ -1,26 +1,8 @@
-<div class="eventbox">
+<div id="eventbox">
 <%= will_paginate @events %>
 <h2><%= page_entries_info @events%></h2>
 <% @events.each do |event| %>
   <%= render event%>
-<!--  <div class="event clearfix">
-    <div class="image"><a href="<%= event.image %>"><img src="<%= event.image.blank? ? "/images/seattlelogoinverse.png" : event.image %>" width=150 height=150 /></a></div>
-    <div class="source"><%= event.source %></div>
-    <div class="title">
-      <a href="<%= event.url %>"><%= event.title %></a>
-    </div>
-    <div class="venue">
-      <%= event.venue_name %>
-    </div>
-    <div class="time"><%= event.start.strftime("%a, %b %e, %Y, %l:%M%P") %></div>
-    <div class="tags"><%= event.tags %></div>
-    <div style="clear:both">&nbsp;</div>
-    <div class="admin">
-      <%= link_to 'Show', event %>
-      <%= link_to 'Edit', edit_event_path(event) %>
-      <%= link_to 'Destroy', event, :confirm => 'Are you sure?', :method => :delete %>
-    </div>
-  </div> -->
 <% end %>
 <%= will_paginate @events %>
 </div>

@@ -1,15 +1,32 @@
-.event-source {float:right;  padding:0 0 0 22px; color: #7D7D7D;}
-.tags {float:right; font-size: 11px; color: #7D7D7D; text-align: right;}
-.event img {
-	width:209px;
+#eventbox img.thumbnail {
+	width:180px;
 	height:auto;
-	max-height:300px;
+	max-height:250px;
 }
 
-#content img.gcalbtn {
+#eventbox img.gcalbtn {
 	height: auto;
 	width: auto;
 	border: none;
 	background: transparent;
+	float:right;
 }
 
+#searchbar {
+	width: 590px;
+	background: white;
+	padding: 10px;
+	font-size: 1.05em;
+	line-height: 1.75em;
+	float: left;
+	margin-bottom: 10px;
+}
+
+#searchlabel {
+	font-size: larger;
+}
+
+#eventsearchsubmit {
+	vertical-align: text-bottom;
+	margin: 0;
+}

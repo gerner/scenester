@@ -86,17 +86,16 @@
 
 	    	
 	</div>
+    
+    <div id="bottom" class="clearfloat">
 
-	
-	<div id="bottom" class="clearfloat">
-		
-	<div id="front-list">	
-	
-	<%= yield %>	
-			
-
-	</div>
-		
+    <div id="searchbar">
+      <%= form_tag(search_path, :method => "get") do %>
+      <span id="searchlabel">Search Events:</span>
+        <%= text_field_tag(:q, @q || "Search Events...", :id => "searchbox", :onclick => "if(this.value == 'Search Events...') this.value='';", :onblur => "if(this.value.length == 0) this.value= 'Search Events...';") %>
+   <input type="image" src="/images/search.gif" id="eventsearchsubmit"  alt="Search" onclick="submit()"/>
+      <% end %>
+    </div>
 
 	<div id="sidebar">
   
@@ -112,10 +111,14 @@
 
 </div>
 
-
-
-
 	</div>	
+	<div id="front-list">	
+	
+	<%= yield %>	
+			
+
+	</div>
+		
 
 </div>  
  
