@@ -39,7 +39,7 @@ class Event < ActiveRecord::Base
   def self.find_matching(e)
     #TODO: what if an event has no url and has just changed time? how to differentiate this from events that recur (same title, different event)
     #Event.where("(title = ? AND start = ?) OR (url = ?)", e.title, e.start, e.url)
-    Event.where(:source => e.source, :source_id => e.source_id)
+    Event.joins(:event_sources).where("event_sources.source = ? AND event_sources.remote_id = ?", e.source, e.source_id)
   end
 
   def self.find_attending(venue_name, t, options = {})
@@ -185,6 +185,7 @@ class Event < ActiveRecord::Base
   def is_duplicate_of(candidate)
     #id != candidate.id && similarity(candidate) > 0.307741
     #id != candidate.id && similarity(candidate > 0.634310
+    #this decision tree built by waffles
     features = similarity_vector(candidate)
     if features[:source_matches] < 1
       if features[:title_jaccard] < 0.25
@@ -237,6 +238,24 @@ class Event < ActiveRecord::Base
       duplicates << candidate if is_duplicate_of(candidate)
     end
     return duplicates
+  end
+
+  def merge(other)
+    # add the sources
+    other.event_sources.each do |s|
+      next if event_sources.exists(:source => s.source)
+      event_sources << s.clone
+    end
+
+    title ||= other.title
+    image ||= other.image
+    url ||= other.url
+    start ||= other.start
+    self.end || other.end
+    tags ||= other.tags
+    venue ||= other.venue
+
+    return self
   end
 
 end

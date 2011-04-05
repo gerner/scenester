@@ -60,12 +60,22 @@ namespace :events do
   end
   
   desc "print events"
-  task :print => :environment do
-    events = Event.order("start").all
-    events.each do |e|
-      puts "#{e.inspect}"
+  task :print, :field, :needs => :environment do |t, args|
+    field = args[:field]
+
+    events = Event.order("start")
+    if !field
+      events.each do |e|
+        puts "#{e.inspect}"
+      end
+      puts "#{events.size} events in database"
+    elsif events.first.respond_to?(field)
+      events.each do |e|
+        puts "#{e.send(field.to_s)}"
+      end
+    else
+      puts "#{field} not a field on event"
     end
-    puts "#{events.size} events in database"
   end
 
   desc "load events"
@@ -76,12 +86,16 @@ namespace :events do
 
     if !source
       puts "you must specify a source (or all for all sources)"
+      LoadEvents.sources.each do |v|
+        puts "\t#{v}"
+      end
     elsif source == "all"
       puts "loading all events"
       LoadEvents.load_events
-    elsif LoadEvents.respond_to?("load_"+source)
+    elsif LoadEvents.sources.index(source)
       puts "loading events from #{source}"
-      LoadEvents.send(("load_"+source).to_sym)
+      events_loaded = LoadEvents.send(("load_"+source).to_sym)
+      puts "loaded #{events_loaded} new events"
     else
       puts "unknown source \"#{source}\""
       LoadEvents.sources.each do |s|
