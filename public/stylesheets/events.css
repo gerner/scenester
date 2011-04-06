@@ -35,3 +35,14 @@
 	width:400px;
 	height:1.6em;
 }
+
+#middle .selected-odd, #middle .selected-even {
+	background:none;
+	color:#fff;
+	text-decoration:none;
+	}
+
+#middle .selected-odd {background:#333333; color:#fff; }
+#middle .selected-even {background:#3c78a7; color:#fff; }
+#middle .selected-odd a {background:#333333; color:#fff; }
+#middle .selected-even a {background:#3c78a7; color:#fff; }

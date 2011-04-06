@@ -4,6 +4,7 @@ class EventsController < ApplicationController
   # GET /events
   # GET /events.xml
   def index
+    @nav_cat = :today
     Time.zone = "America/Los_Angeles"
     now = Time.new
     today = Time.local(now.year, now.month, now.day, 4, 0, 0)
@@ -24,8 +25,21 @@ class EventsController < ApplicationController
       return
     end
     logger.info("query: #{params[:q]}")
+
     Time.zone = "America/Los_Angeles"
     @q = params[:q]
+
+    #TODO: cat pages should probably be separate methods
+    case(@q)
+    when "tag:music"
+      @nav_cat = :music
+    when "tag:arts"
+      @nav_cat = :art
+    when "tag:theater"
+      @nav_cat = :theater
+    when "tag:tech"
+      @nav_cat = :tech
+    end
     now = Time.new
     #TODO: this should really be in the user's timezone, or in the event catalog's timezone
     @events = Event.paginate(:conditions => Event.search_conditions(@q, :clauses => ["start > ? AND start < ?"], :values => [now, now.advance(:months => 1)]), :page => params[:page], :per_page => params[:per_page], :order => :start, :include => [:venue])
