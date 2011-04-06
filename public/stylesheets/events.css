@@ -28,5 +28,10 @@
 
 #eventsearchsubmit {
 	vertical-align: text-bottom;
-	margin: 0;
+	padding-left: 5px;
+}
+
+#searchbox {
+	width:400px;
+	height:1.6em;
 }
