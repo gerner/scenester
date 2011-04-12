@@ -34,7 +34,7 @@ module ApplicationHelper
 
 	    	
 	<div id="cat-3" class="category #{theater_class}">
-				<span class="cat_title"><a href="/search?q=tag:theater">Performing Art</a></span>
+				<span class="cat_title"><a href="/search?q=tag:theater">Performance</a></span>
 		<a href="/search?q=tag:theater"><p>Stop here for previews of Seattle theatre, comedy and dance.</p> 
 </a>
 	</div>
