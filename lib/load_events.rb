@@ -8,6 +8,7 @@ require 'rubygems'
 require 'rmeetup'
 require 'xml'
 require 'addressable/uri'
+require 'icalendar'
 
 module LoadEvents
   def self.sources
@@ -16,7 +17,8 @@ module LoadEvents
       "seattlerep",
       "fifthave",
       "seattleweekly",
-      "kexp"]
+      "kexp",
+      "seattletechcalendar"]
   end
   def self.logger log = nil
     if log
@@ -538,6 +540,16 @@ module LoadEvents
   #get events from Seattle Tech Calendar
   def self.load_seattletechcalendar
     resp = Net::HTTP.get(URI.parse("http://www.google.com/calendar/ical/seattletechcalendar.com_9ko2jk3gdtn92f71t3bicm2das%40group.calendar.google.com/public/basic.ics"))
+
+    cals = Icalendar.parse(resp)
+    cals.first.events.each do |e|
+      puts "\t#{e.dtstart}"
+      next if e.dtstart < DateTime.now && e.recurrence_rules.count == 0
+      puts "\t#{e.recurrence_rules.map{ |rule| rule.orig_value }}" if e.recurrence_rules.count == 1 
+      next if e.recurrence_rules.count == 1 && e.recurrence_rules[0].orig_value.index("UNTIL=") && Time.parse(e.recurrence_rules[0].orig_value.split("UNTIL=")[1]) < DateTime.now
+      puts "#{e.dtstart}\t#{e.recurrence_rules.map{ |rule| rule.orig_value }}"
+    end
+    return 0
   end
 end
 
