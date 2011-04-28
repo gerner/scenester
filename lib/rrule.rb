@@ -12,13 +12,13 @@ module Icalendar
 
     def <(other)
       return true if dtstart < other.dtstart
-      return true if dtstart == other.dtstart && dtend < other.dtend
+      return true if dtstart == other.dtstart && dtend && dtend < other.dtend
       return false
     end
 
     def >(other)
       return true if dtstart > other.dtstart
-      return true if dtstart == other.dtstart && dtend > other.dtend
+      return true if dtstart == other.dtstart && dtend && dtend > other.dtend
       return false
     end
 
@@ -28,6 +28,10 @@ module Icalendar
       #return 0 if other == self
       #TODO: this is too inclusive
       return 0
+    end
+
+    def initialize_copy(source)
+      @properties = @properties.dup
     end
   end
 
@@ -47,8 +51,10 @@ module Icalendar
     # We have to monkey patch Icalendar's RRule since it's implementation of
     def occurrences_of_event_starting(event, datetime)
       events = []
+      i = 0
       event_instances(event, datetime) do |e|
         events << e
+        i += 1
       end
       return events
     end
@@ -95,21 +101,22 @@ module Icalendar
       #   the below stuff all assumes the unit of events is days
       # first get the very interval of candidate days (including DTSTART)
 
+      interval = @interval ? @interval : 1
+
       if @count
-        #materialize every event starting with event.dtstart counting along until we get to datetime
-        seq_size, start_date = get_day_interval(event.dtstart)
+        #materialize events starting with event.dtstart counting along until we get to datetime
+        seq_size, start_date = get_day_interval(event, event.dtstart)
         count = 0
         #skip over intervals that are completely before the one we want
         while count < @count && start_date.advance(:days => seq_size) <= datetime
           events = materialize_day_interval(event, seq_size, start_date)
           count += events.size
-          start_date = start_date.advance(:days => seq_size)
-          seq_size, start_date = get_day_interval(start_date)
+          seq_size, start_date = get_day_interval(event, start_date, interval)
         end
 
         #now we either have our interval or ran out of events
+        seq_size, start_date = get_day_interval(event, start_date)
         while count < @count
-          seq_size, start_date = get_day_interval(start_date)
           #materialize the current interval
           events = materialize_day_interval(event, seq_size, start_date)
           events.each do |e|
@@ -118,13 +125,13 @@ module Icalendar
             break if count > @count
             yield e
           end
-          start_date = start_date.advance(:days => seq_size)
+          seq_size, start_date = get_day_interval(event, start_date, interval)
         end
       else
         #just fast forward til datetime
-        start_date = datetime
+        start_date = [datetime, event.dtstart].max
+        seq_size, start_date = get_day_interval(event, start_date)
         while @until.blank? || start_date < @until
-          seq_size, start_date = get_day_interval(datetime)
           #materialize the current interval
           events = materialize_day_interval(event, seq_size, start_date)
           events.each do |e|
@@ -132,7 +139,7 @@ module Icalendar
             break unless @until.blank? || e.dtstart < @until
             yield e
           end
-          start_date = start_date.advance(:days => seq_size)
+          seq_size, start_date = get_day_interval(event, start_date, interval)
         end
       end
     end
@@ -142,10 +149,15 @@ module Icalendar
     def materialize_day_interval(event, seq_size, start_date)
       # first element of seq is start_date
       
-      duration_secs = event.dtend - event.dtstart
+      duration_secs = event.dtend ? event.dtend - event.dtstart : 0
       events = Set.new
       if @frequency == "DAILY" && !@by_list[:bymonthday] && !@by_list[:byday]
-          add_recurrence(events, event, start_date)
+        add_recurrence(events, event, start_date)
+      end
+
+      if @frequency == "WEEKLY" && !@by_list[:byday]
+        wkst = @wkst ? DAYS_OF_WEEK.index(@wkst) : 1
+        add_recurrence(events, event, start_date.advance(:days => ((event.dtstart.wday+7)-wkst) % 7))
       end
 
       if @by_list[:bymonthday]
@@ -241,32 +253,49 @@ module Icalendar
 
     def add_recurrence(events, event, datetime)
       return if event.dtstart > datetime
-      duration_secs = event.dtend - event.dtstart
-      e = Event.new
-      event.properties.each do |k,v|
-        e.properties[k] = v
-      end
+      duration_secs = event.dtend ? event.dtend - event.dtstart : 0
+      e = event.dup
+      #Event.new
+      #event.properties.each do |k,v|
+      #  e.properties[k] = v
+      #end
       e.dtstart = datetime
-      e.dtend = e.dtstart.advance(:seconds => duration_secs)
+      e.dtend = e.dtstart.advance(:seconds => duration_secs) if event.dtend
       events << e
     end
 
-    # returns the interval of day which includes the specified date
+    # returns the first interval of days after the specified date
+    #   skips intervals intervals after the above interval
     #   each element in sequence is nil or an event
-    # this will apply FREQ and WKST
-    def get_day_interval(datetime)
+    # this will apply FREQ and WKST and INTERVAL
+    def get_day_interval(event, datetime, intervals=0)
       seq = []
       case @frequency
       when "DAILY"
+        if @interval && @interval > 1
+          rem = (datetime.mjd - event.dtstart.mjd) % @interval
+          datetime = datetime.advance(:days => rem)
+        end
         seq_size = 1
         start_date = datetime
+        start_date = start_date.advance(:days => intervals)
       when "WEEKLY"
+        if @interval && @interval > 1
+          rem = ((datetime.mjd - event.dtstart.mjd) / 7.0).round % @interval
+          datetime = datetime.advance(:weeks => rem)
+        end
         wkst = @wkst ? DAYS_OF_WEEK.index(@wkst) : 1
         seq_size = 7
         start_date = datetime.advance(:days => -((datetime.wday - wkst) % 7))
+        start_date = start_date.advance(:weeks => intervals)
       when "MONTHLY"
+        if @interval && @interval > 1
+          rem = ((datetime.month - event.dtstart.month) + 12*(datetime.year - event.dtstart.year)) % @interval
+          datetime = datetime.advance(:months => rem)
+        end
         seq_size = Time::days_in_month(datetime.month, datetime.year)
         start_date = datetime.advance(:days => -(datetime.day - 1))
+        start_date = start_date.advance(:months => intervals)
       else
         raise "we don't support any freq other than DAILY, WEEKLY, MONTHLY. definitely not #{@freq}"
       end
