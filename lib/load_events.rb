@@ -541,15 +541,27 @@ module LoadEvents
   def self.load_seattletechcalendar
     resp = Net::HTTP.get(URI.parse("http://www.google.com/calendar/ical/seattletechcalendar.com_9ko2jk3gdtn92f71t3bicm2das%40group.calendar.google.com/public/basic.ics"))
 
-    cals = Icalendar.parse(resp)
+    cals = RiCal.parse_string(resp)
+    events_saved = 0
     cals.first.events.each do |e|
-      puts "\t#{e.dtstart}"
-      next if e.dtstart < DateTime.now && e.recurrence_rules.count == 0
-      puts "\t#{e.recurrence_rules.map{ |rule| rule.orig_value }}" if e.recurrence_rules.count == 1 
-      next if e.recurrence_rules.count == 1 && e.recurrence_rules[0].orig_value.index("UNTIL=") && Time.parse(e.recurrence_rules[0].orig_value.split("UNTIL=")[1]) < DateTime.now
-      puts "#{e.dtstart}\t#{e.recurrence_rules.map{ |rule| rule.orig_value }}"
+      e.occurrences(:starting => DateTime.now.advance(:weeks => -1), :before => DateTime.now.advance(:months => 1)).each do |o|
+        m = o.description.match(/http:\/\/[^[:space:]>"']*/)
+
+        e = Event.new
+        e.start = o.start_time
+        e.end = o.finish_time
+        e.image = ""
+        e.title = o.summary
+        e.url = m[0] if m
+        e.source = "seattletechcalendar"
+        e.source_id = "#{o.uid}#{o.start_time.to_s(:number)}"
+        e.tags = "tech"
+        e.venue_name = o.location
+
+        events_saved += self.save_new_event(e)
+      end
     end
-    return 0
+    return events_saved
   end
 end
 
