@@ -543,8 +543,10 @@ module LoadEvents
 
     cals = RiCal.parse_string(resp)
     events_saved = 0
-    cals.first.events.each do |e|
-      e.occurrences(:starting => DateTime.now.advance(:weeks => -1), :before => DateTime.now.advance(:months => 1)).each do |o|
+    events_found = 0
+    cals.first.events.each do |ie|
+      ie.occurrences(:starting => DateTime.now.advance(:weeks => -1), :before => DateTime.now.advance(:months => 1)).each do |o|
+        events_found += 1
         m = o.description.match(/http:\/\/[^[:space:]>"']*/)
 
         e = Event.new
@@ -561,6 +563,7 @@ module LoadEvents
         events_saved += self.save_new_event(e)
       end
     end
+    self.logger.info "#{events_found} events in seattle tech calendar (#{events_saved} new)"
     return events_saved
   end
 end
