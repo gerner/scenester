@@ -473,9 +473,11 @@ module LoadEvents
     Time.zone = "Pacific Time (US & Canada)"
     #TODO: to get events for a different day from today, change this value (up to 7 days ahead, or quite far in the past)
     times = (0..6).collect { |i| Time.now.advance(:days => i) }
+    i = 0
     times.each do |t|
       self.logger.info("getting a batch of kexp events")
-      res = Net::HTTP.get(URI.parse("http://www.kexp.org/events/clubcalendar.asp?count=#{t.day - Time.now.day}"))
+      res = Net::HTTP.get(URI.parse("http://www.kexp.org/events/clubcalendar.asp?count=#{i}"))
+      i+=1
       XML::Error.set_handler(&XML::Error::QUIET_HANDLER)
       p = XML::HTMLParser.string(res, :options => XML::HTMLParser::Options::RECOVER | XML::HTMLParser::Options::NONET | XML::HTMLParser::Options::NOERROR | XML::HTMLParser::Options::NOWARNING)
       d = p.parse
