@@ -125,6 +125,14 @@ class Event < ActiveRecord::Base
     end
   end
 
+  def venue_with_address
+    if venue
+      "#{venue.name}, #{venue.address}"
+    else
+      venue_name
+    end
+  end
+
   def duration
     (self.end - start).abs
   end
