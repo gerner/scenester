@@ -64,7 +64,9 @@ Events::Application.routes.draw do
   # Note: This route will make all actions in every controller accessible via GET requests.
   # match ':controller(/:action(/:id(.:format)))'
   
-  # setup for oauth callbacks
+  # setup for oauth callbacks and sessions
   match '/auth/:provider/callback', :to => 'sessions#create'
-  match '/profile', :to => 'sessions#show', :as => 'profile'
+  match '/profile', :to => 'sessions#show'
+  match '/login', :to => 'sessions#new' 
+  match '/logout', :to => 'sessions#destroy'
 end

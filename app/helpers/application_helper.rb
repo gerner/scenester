@@ -59,4 +59,12 @@ module ApplicationHelper
 
     n.html_safe
   end
+
+  def login_form
+    if current_user
+      ("Hi #{current_user.name}! | "+link_to("Logout", logout_url)).html_safe
+    else
+      link_to("Login or Sign up", login_url).html_safe
+    end
+  end
 end

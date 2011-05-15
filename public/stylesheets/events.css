@@ -46,3 +46,9 @@
 #middle .selected-even {background:#3c78a7; color:#fff; }
 #middle .selected-odd a {background:#333333; color:#fff; }
 #middle .selected-even a {background:#3c78a7; color:#fff; }
+
+#loginbox {
+	display:inline;
+	float:right;
+	padding-top:8px;
+}

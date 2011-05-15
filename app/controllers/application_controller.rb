@@ -3,7 +3,6 @@ class ApplicationController < ActionController::Base
 
   before_filter :set_timezone
 
-
   def set_timezone
     # current_user.time_zone #=> 'London'
     #Time.zone = current_user.time_zone
@@ -11,6 +10,15 @@ class ApplicationController < ActionController::Base
   end
 
   protected
+
+  def require_user
+    unless current_user
+      store_location
+      flash[:notice] = "You must be logged in to access this page"
+      redirect_to login_url
+      return false
+    end
+  end
 
   def current_user
     @current_user ||= User.find_by_id(session[:user_id])
