@@ -17,6 +17,8 @@ gem 'addressable'
 gem "will_paginate", "~> 3.0.pre2"
 gem 'jquery-rails', '>= 0.2.6'
 
+gem 'omniauth'
+
 # Use unicorn as the web server
 # gem 'unicorn'
 

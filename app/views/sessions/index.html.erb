@@ -1,0 +1,8 @@
+<h1>Hello <%= @user.name %></h1>
+<div id="authorizations">
+  <ul>
+    <% @user.authorizations.each do |auth| %>
+      <li><%= auth.provider %></li>
+    <% end %>
+  </ul>
+</div>

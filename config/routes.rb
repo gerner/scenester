@@ -63,4 +63,8 @@ Events::Application.routes.draw do
   # This is a legacy wild controller route that's not recommended for RESTful applications.
   # Note: This route will make all actions in every controller accessible via GET requests.
   # match ':controller(/:action(/:id(.:format)))'
+  
+  # setup for oauth callbacks
+  match '/auth/:provider/callback', :to => 'sessions#create'
+  match '/profile', :to => 'sessions#show', :as => 'profile'
 end

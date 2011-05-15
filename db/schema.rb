@@ -10,7 +10,30 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20110320170947) do
+ActiveRecord::Schema.define(:version => 20110515195637) do
+
+  create_table "access_tokens", :force => true do |t|
+    t.integer  "user_id"
+    t.string   "type",       :limit => 30
+    t.string   "key"
+    t.string   "token",      :limit => 1024
+    t.string   "secret"
+    t.boolean  "active"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "access_tokens", ["key"], :name => "index_access_tokens_on_key", :unique => true
+
+  create_table "authorizations", :force => true do |t|
+    t.string   "provider"
+    t.string   "uid"
+    t.integer  "user_id"
+    t.string   "token"
+    t.string   "secret"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
 
   create_table "event_sources", :force => true do |t|
     t.integer  "event_id"
@@ -34,6 +57,23 @@ ActiveRecord::Schema.define(:version => 20110320170947) do
     t.datetime "updated_at"
     t.integer  "venue_id"
     t.string   "source_id"
+  end
+
+  create_table "sessions", :force => true do |t|
+    t.string   "session_id", :null => false
+    t.text     "data"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "sessions", ["session_id"], :name => "index_sessions_on_session_id"
+  add_index "sessions", ["updated_at"], :name => "index_sessions_on_updated_at"
+
+  create_table "users", :force => true do |t|
+    t.string   "name"
+    t.boolean  "is_admin"
+    t.datetime "created_at"
+    t.datetime "updated_at"
   end
 
   create_table "venues", :force => true do |t|
