@@ -1,8 +1,11 @@
 <div id="eventbox">
 <%= will_paginate @events %>
-<h2><%= page_entries_info @events%></h2>
-<% @events.each do |event| %>
-  <%= render event%>
+<strong><%= page_entries_info @events%></strong>
+<% group_events_by_day(@events).each do |day, events| %>
+  <h2><%= day_separator(day) %></h2>
+  <% events.each do |event| %>
+    <%= render event%>
+  <% end %>
 <% end %>
 <%= will_paginate @events %>
 </div>
