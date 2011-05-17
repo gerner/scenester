@@ -46,8 +46,9 @@
 <%= link_to 'Edit', edit_event_path(@event) %> |
 <%= link_to 'Back', events_path %>
 
+<% if @event.duplicates.size > 0 %>
 <div>
-  <h4>Possible Duplicates</h4>
+  <h4><%= @event.duplicates.size %> Possible Duplicates</h4>
   <% @event.duplicates.each do |duplicate| %>
     <div>
       <%= duplicate.title_with_venue %> <%= duplicate.source %> <%= duplicate.start.strftime("%m %e %l:%M%P") %>
@@ -56,3 +57,4 @@
     </div>
   <% end %>
 </div>
+<% end %>
