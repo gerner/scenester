@@ -390,7 +390,7 @@ module LoadEvents
       d = p.parse
 
       self.logger.info("processing a batch of seattleweekly results")
-      nodes = d.find("//div[@class='widget']//table/tr/td[@class='upper']")
+      nodes = d.find("//div[@class='widget trackme']//table/tr/td[@class='upper']")
       nodes.each do |n|
         e = Event.new
         e.image = ""
