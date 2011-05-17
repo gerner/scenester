@@ -52,3 +52,9 @@
 	float:right;
 	padding-top:8px;
 }
+
+.day-divider {
+	border-bottom:3px solid black;
+	margin: 15px 0 10px 0;
+	font-size:2em;
+}
