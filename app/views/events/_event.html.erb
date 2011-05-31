@@ -12,5 +12,13 @@
           <% else %>
             <%= link_to 'Learn More', event, :class => "button" %>
           <% end %><%= add_to_google_calendar(event) %>
+          <% if is_admin %>
+            <% if event.recommended %>
+              <%= link_to 'Unrecommend', recommend_event_path(event), :method => "delete" %>
+            <% else %>
+              <%= link_to 'Recommend', recommend_event_path(event), :method => "post" %>
+            <% end %>
+          <% end %>
+          <div></div>
         </div>
 	</div>

@@ -23,7 +23,7 @@ module EventsHelper
     elsif date.beginning_of_day == DateTime.now.beginning_of_day.advance(:days => 1)
       "Tomorrow"
     else
-      date.strftime("%b %d")
+      date.strftime("%A, %b %d")
     end
   end
 end

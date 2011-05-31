@@ -9,7 +9,7 @@ class EventsController < ApplicationController
     now = Time.new
     today = Time.local(now.year, now.month, now.day, 4, 0, 0)
     #TODO: this should really be in the user's timezone, or in the event catalog's timezone
-    @events = Event.paginate(:conditions => ["start > ?", now], :page => params[:page], :per_page => params[:per_page], :order => :start, :include => [:venue])
+    @events = Event.paginate(:conditions => ["start > ?", now], :page => params[:page], :per_page => params[:per_page], :order => 'DATE(start) ASC, recommended DESC, start ASC', :include => [:venue])
 
     respond_to do |format|
       format.html # index.html.erb
@@ -145,5 +145,23 @@ class EventsController < ApplicationController
       format.html { redirect_to(events_url) }
       format.xml  { head :ok }
     end
+  end
+
+  # PUT /events/1/recommend
+  def recommend
+    @event = Event.find(params[:id])
+    @event.recommended = true
+    @event.save
+
+    redirect_to(:back)
+  end
+
+  # DELETE /events/1/recommend
+  def unrecommend
+    @event = Event.find(params[:id])
+    @event.recommended = false
+    @event.save
+
+    redirect_to(:back)
   end
 end

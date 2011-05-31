@@ -1,6 +1,11 @@
 Events::Application.routes.draw do
   match "events/foursquare" => "events#foursquare"
-  resources :events
+  resources :events do
+    post 'recommend', :on => :member, :action => 'recommend'
+    delete 'recommend', :on => :member, :action => 'unrecommend'
+  end
+  #match "events/:id/recommend", :to => "events#recommend", :via => :post
+  #match "events/:id/recommend", :to => "events#unrecommend", :via => :delete
   resources :venues
 
   get "home/index"

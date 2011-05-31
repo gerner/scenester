@@ -3,10 +3,16 @@ class ApplicationController < ActionController::Base
 
   before_filter :set_timezone
 
+  helper_method :is_admin
+
   def set_timezone
     # current_user.time_zone #=> 'London'
     #Time.zone = current_user.time_zone
     Time.zone = "America/Los_Angeles"
+  end
+
+  def is_admin
+    current_user && current_user.is_admin
   end
 
   protected
