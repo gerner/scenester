@@ -186,7 +186,12 @@ module LoadEvents
       e = Event.new
       e.image = ""
       e.title = n.find_first("e_name").content.strip
-      e.url = Addressable::URI.heuristic_parse(n.find_first("e_web").content.strip).to_s
+      begin
+        e.url = Addressable::URI.heuristic_parse(n.find_first("e_web").content.strip).to_s
+      rescue
+        self.logger.error e.inspect
+        next
+      end
       e.venue_name = n.find_first("e_venue").content.strip
 
       v = Venue.new
