@@ -58,3 +58,24 @@
 	margin: 15px 0 10px 0;
 	font-size:2em;
 }
+
+.pill {
+    float:left;
+    background-color: #CCC;
+    border: 1px solid black;
+    margin: 3px;
+    padding: 5px;
+    max-width: 30em;
+    overflow: hidden;
+    white-space: nowrap;
+    font-size:12pt;
+}
+
+.icon {
+    width:75px;
+    height:75px;
+}
+
+.info {
+   font-size:larger; 
+}

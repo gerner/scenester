@@ -4,8 +4,14 @@
 <% group_events_by_day(@events).each do |day, events| %>
   <h2 class="day-divider"><%= day_separator(day) %></h2>
   <% events.each do |event| %>
-    <%= render event%>
+    <% if event.recommended %>
+       <div class="clearfloat">&nbsp;</div>
+      <%= render event %>
+    <% else %>
+      <%= render :partial => "pill", :locals => {:event => event} %>
+    <% end %>
   <% end %>
+  <div class="clearfloat">&nbsp;</div>
 <% end %>
 <%= will_paginate @events %>
 </div>

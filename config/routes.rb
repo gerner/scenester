@@ -3,6 +3,7 @@ Events::Application.routes.draw do
   resources :events do
     post 'recommend', :on => :member, :action => 'recommend'
     delete 'recommend', :on => :member, :action => 'unrecommend'
+    get 'partial', :on => :member, :action => 'show_partial'
   end
   #match "events/:id/recommend", :to => "events#recommend", :via => :post
   #match "events/:id/recommend", :to => "events#unrecommend", :via => :delete
