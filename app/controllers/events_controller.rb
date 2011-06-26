@@ -84,6 +84,7 @@ class EventsController < ApplicationController
     respond_to do |format|
       format.html # show.html.erb
       format.xml  { render :xml => @event }
+      format.json { render :json => @event }
     end
   end
 
@@ -134,9 +135,11 @@ class EventsController < ApplicationController
       if @event.update_attributes(params[:event])
         format.html { redirect_to(@event, :notice => 'Event was successfully updated.') }
         format.xml  { head :ok }
+        format.json { render :nothing =>  true }
       else
         format.html { render :action => "edit" }
         format.xml  { render :xml => @event.errors, :status => :unprocessable_entity }
+        format.json { render :nothing =>  true }
       end
     end
   end

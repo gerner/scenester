@@ -58,9 +58,10 @@
 	margin: 15px 0 10px 0;
 	font-size:2em;
 }
-
-.pill {
+.pillbox {
     float:left;
+}
+.pill {
     background-color: #CCC;
     border: 1px solid black;
     margin: 3px;
@@ -71,6 +72,10 @@
     font-size:12pt;
 }
 
+.clearpill {
+    clear:both;
+}
+
 .icon {
     width:75px;
     height:75px;
@@ -79,3 +84,5 @@
 .info {
    font-size:larger; 
 }
+
+

@@ -1,4 +1,5 @@
-<a href="#" onclick="$(this).load('<%= partial_event_path(event) %>')"><div class="pill" style="background-color: #<%= ["9CC","C9C","CC9"].sample %>">
+<div id="eventpill-<%= event.id %>" class="pillbox">
+  <div class="pill" style="background-color: #<%= ["9CC","C9C","CC9"].sample %>" onclick="loadPill('eventpill-<%= event.id %>', '<%= partial_event_path(event) %>');">
     <%= truncate(event.title.titleize) %>
 </div>
-</a>
+</div>
