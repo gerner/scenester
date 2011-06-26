@@ -85,4 +85,10 @@
    font-size:larger; 
 }
 
-
+#about {
+    background-color:white;
+    margin-bottom:10px;
+    margin-top:20px;
+    clear:both;
+    padding:10px;
+}

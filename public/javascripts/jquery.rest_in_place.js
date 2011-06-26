@@ -10,7 +10,7 @@ RestInPlaceEditor.prototype = {
   // Public Interface Functions //////////////////////////////////////////////
   
   activate : function() {
-    this.oldValue = this.element.html();
+    this.oldValue = this.element.text();
     this.element.addClass('rip-active');
     this.element.unbind('click', this.clickHandler)
     this.activateForm();

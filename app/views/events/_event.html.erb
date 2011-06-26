@@ -2,10 +2,16 @@
 <div id="<%= dom_id event %>" class="clearfloat" data-url="<%= event_path(event) %>" data-object="event">
           <a href="images/portfolio/portfolio2.jpg" class="fancylightbox" title="Title can be filled in or removed easily"><img src="<%= event.safe_image %>"  alt="" class="alignleft icon" /></a>
       <!-- <h3 class="cat_title"><%= event.tags ? event.tags.split(",").first  : "" %> &raquo;</h3> -->
-      <div class="title rest_in_place" data-formtype="input" data-attribute="title"><%= event.title %></div>
+        <% if is_admin %>
+          <div class="title rest_in_place" data-formtype="input" data-attribute="title"><%= event.title %></div>
+          <div class="rest_in_place" data-formtype="input" data-attribute="url"><%= event.url %></div>
+        <% else %>
+          <div class="title"><%= link_to event.title, event.url %></div>
+        <% end %>
         <div class="info"><%= event.venue_name %> - <%= event.start.strftime("%b %d, %l:%M%P") %></div>
         <div class="meta">[ <a href="<%= event.url %>">from <%= event.source %></a> | <%= event.tags %> ]</div>
         <div class="event">
+          <% if is_admin %>
           <div class="rest_in_place" data-formtype="textarea" data-attribute="description">
             <% if event.description.blank? %>
               click to add a description
@@ -13,12 +19,15 @@
              <%= event.description %>
             <% end %>
           </div>
+          <% else %>
+            <div><%= event.description %></div>
+          <% end %>
           <!-- <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce cursus nisi vitae nibh sollicitudin a sagittis urna viverra. Donec malesuada tempus enim eleifend egestas. Donec mattis mollis mauris, ut congue ante euismod quis. Phasellus nec rutrum arcu. Pellentesque condimentum dapibus quam, dapibus accumsan nulla sollicitudin vitae.</p> -->
           <% if event.tonight? %>
-            <%= link_to 'Learn More - Today!', event, :class => "colored-button" %>
+            <%= link_to 'Learn More - Today!', event.url, :class => "colored-button" %>
           <% else %>
-            <%= link_to 'Learn More', event, :class => "button" %>
-          <% end %><!-- <%= add_to_google_calendar(event) %> -->
+            <%= link_to 'Learn More', event.url, :class => "button" %>
+          <% end %>
           <% if is_admin %>
             <% if event.recommended %>
               <%= link_to 'Unrecommend', recommend_event_path(event), :method => "delete" %>
