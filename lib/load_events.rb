@@ -18,7 +18,8 @@ module LoadEvents
       "fifthave",
       "seattleweekly",
       "kexp",
-      "seattletechcalendar"]
+      "seattletechcalendar",
+      "jambase"]
   end
   def self.logger log = nil
     if log
@@ -571,6 +572,50 @@ module LoadEvents
       end
     end
     self.logger.info "#{events_found} events in seattle tech calendar (#{events_saved} new)"
+    return events_saved
+  end
+
+  #get events from jambase
+  def self.load_jambase
+    res = Net::HTTP.get(URI.parse("http://api.jambase.com/search?zip=98116&apikey=d89vds354c5xae5bgzxhvd2z"))
+
+    XML::Error.set_handler(&XML::Error::QUIET_HANDLER)
+    p = XML::HTMLParser.string(res, :options => XML::HTMLParser::Options::RECOVER | XML::HTMLParser::Options::NONET | XML::HTMLParser::Options::NOERROR | XML::HTMLParser::Options::NOWARNING)
+    d = p.parse
+
+    self.logger.info("processing jambase results")
+    nodes = d.find('//event')
+    events_found = 0
+    events_saved = 0
+    nodes.each do |n|
+      events_found += 1
+      e = Event.new
+      e.image = ""
+      artists = []
+      n.find("artists/artist/artist_name").each { |a| artists << a.content.strip }
+      e.title = artists.join(", ")
+      e.venue_name = n.find_first("venue/venue_name").content.strip
+      e.url = n.find_first("event_url").content.strip
+
+      v = Venue.new
+      v.name = e.venue_name
+      v.city = n.find_first("venue/venue_city").content.strip
+      v.state = n.find_first("venue/venue_state").content.strip
+      v.zipcode = n.find_first("venue/venue_zip").content.strip
+      v.source = "jambase"
+      v.source_id = n.find_first("venue/venue_id").content.strip
+      v = Venue.find_and_merge(v)
+      e.venue = v if v.save
+
+      date_parts = n.find_first("event_date").content.strip.split("/")
+      e.start = DateTime.new(date_parts[2].to_i, date_parts[0].to_i, date_parts[1].to_i, 19, 0, 0)
+      e.end = e.start.advance(:hours => 3)
+      e.source = "jambase"
+      e.source_id = n.find_first("event_id").content.strip
+      e.tags = "music"
+
+      events_saved += self.save_new_event(e)
+    end
     return events_saved
   end
 end
