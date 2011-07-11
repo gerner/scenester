@@ -67,4 +67,27 @@ module ApplicationHelper
       link_to("Login or Sign up", login_url).html_safe
     end
   end
+
+  def share_box id
+    n = <<-eos
+    <div class="cta-shares clearfloat">
+      <div class="cta-share"><fb:like id="#{id}-fblike" href="fourthirtysix.com" send="false" layout="box_count" show_faces="false" font="arial"></fb:like></div>
+      <div class="cta-share"><a href="http://twitter.com/share?count=vertical&url=<%=u (polymorphic_path event, :only_path => false) %>" class="twitter-share-button" data-count="horizontal" data-via="4thirtysix">Tweet</a></div>
+      <div class="cta-share"><div id="#{id}-googleplusone"></div></div>
+      <script type="text/javascript">
+        gapi.plusone.render(document.getElementById("#{id}-googleplusone"), {"size": "tall", "count": "true"});
+        /*FB.XFBML.parse(document.getElementById('foo'));*/
+      (function(){
+      var twitterWidgets = document.createElement('script');
+      twitterWidgets.type = 'text/javascript';
+      twitterWidgets.async = true;
+      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
+      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
+    })();
+      </script>
+    </div>
+    eos
+
+    n.html_safe
+  end
 end

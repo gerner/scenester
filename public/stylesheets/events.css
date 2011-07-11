@@ -13,7 +13,8 @@
 }
 
 #searchbar {
-	width: 590px;
+	/*width: 590px;*/
+    width:920px;
 	background: white;
 	padding: 10px;
 	font-size: 1.05em;
@@ -63,17 +64,23 @@
 }
 .pill {
     background-color: #CCC;
-    border: 1px solid black;
-    margin: 3px;
+    /* border: 1px solid black; */
+    margin: 3px 0px 3px 10px;
     padding: 5px;
     max-width: 30em;
     overflow: hidden;
     white-space: nowrap;
     font-size:12pt;
+	cursor: pointer;
 }
 
-.clearpill {
+.clear {
     clear:both;
+}
+
+.pillcontent {
+    border:5px solid transparent;
+    padding:15px;
 }
 
 .icon {
@@ -91,4 +98,43 @@
     margin-top:20px;
     clear:both;
     padding:10px;
+}
+
+.eventbox {
+    border:none;
+    border-bottom:none;
+}
+
+.eventbox .event-cta {
+    float:right;
+    /* border:1px dotted #CCC; */
+    width:220px;
+    padding:10px;
+    margin-left:10px;
+} 
+
+.event-cta .cta-shares {
+    width:180px;
+    padding-left:5px;
+    margin-left:auto;
+    margin-right:auto;
+    text-align:center;
+    vertical-align:bottom;
+}
+
+.event-cta .cta-share {
+    float:right;
+    margin-right:5px;
+}
+
+.event-cta .wannadoit {
+    text-align:center;
+    margin-left:auto;
+    margin-right:auto;
+}
+
+.wannadoit .wannadoitbtn {
+    width:200px;
+    height:30px;
+    margin-top:10px;
 }

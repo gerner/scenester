@@ -381,7 +381,8 @@ h3.authors {
 	}
 
 #front-list {
-	width:590px;
+	/* width:590px; */
+    width: 920px;
 	background:#fff;
 	padding:10px;
 	font-size:1.05em;
@@ -405,11 +406,11 @@ h3.authors {
 	letter-spacing:-0.05em;
 	}
 
-#front-list .clearfloat, #archive .clearfloat {
+/* #front-list .clearfloat, #archive .clearfloat {
 	padding-bottom:10px;
 	border-bottom:1px dotted #ccc;
 	margin-bottom:10px;
-	}
+	} */
 
 #front-list .spoiler, #archive .spoiler {
 	display:block;
@@ -752,7 +753,7 @@ li.my_comment cite strong {
 #front-popular {
 	font-size:0.7em;
 	color:#fff;
-	width: 940px;
+	width: 920px;
 	background:#3c78a7;
 	margin: 0 auto;
 	padding:10px;

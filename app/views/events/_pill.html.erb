@@ -1,5 +1,9 @@
-<div id="eventpill-<%= event.id %>" class="pillbox">
-  <div class="pill" style="background-color: #<%= ["9CC","C9C","CC9"].sample %>" onclick="loadPill('eventpill-<%= event.id %>', '<%= partial_event_path(event) %>');">
+<div id="<%= event.pill_dom_id %>" class="pillbox">
+  <div class="pill" style="background-color: #<%= ["9CC","C9C","CC9"].sample %>" 
+    <% unless event.recommended %>
+    onclick="loadPill('eventpill-<%= event.id %>', '<%= partial_event_path(event) %>');"i
+    <% end %>
+    >
     <%= truncate(event.title.titleize) %>
 </div>
 </div>

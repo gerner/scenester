@@ -137,6 +137,14 @@ class Event < ActiveRecord::Base
     (self.end - start).abs
   end
 
+  def pill_dom_id
+    return "eventpill-#{id}"
+  end
+
+  def pill_content_dom_id
+    return "eventpill-#{id}-content"
+  end
+
   def similarity_vector(candidate)
     features = {}
 
