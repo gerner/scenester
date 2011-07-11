@@ -68,11 +68,11 @@ module ApplicationHelper
     end
   end
 
-  def share_box id
+  def share_box id, share_url
     n = <<-eos
     <div class="cta-shares clearfloat">
-      <div class="cta-share"><fb:like id="#{id}-fblike" href="fourthirtysix.com" send="false" layout="box_count" show_faces="false" font="arial"></fb:like></div>
-      <div class="cta-share"><a href="http://twitter.com/share?count=vertical&url=<%=u (polymorphic_path event, :only_path => false) %>" class="twitter-share-button" data-count="horizontal" data-via="4thirtysix">Tweet</a></div>
+      <div class="cta-share"><fb:like id="#{id}-fblike" href="#{u share_url}" send="false" layout="box_count" show_faces="false" font="arial"></fb:like></div>
+      <div class="cta-share"><a href="http://twitter.com/share?count=vertical&url=#{u share_url}" class="twitter-share-button" data-count="horizontal" data-via="4thirtysix">Tweet</a></div>
       <div class="cta-share"><div id="#{id}-googleplusone"></div></div>
       <script type="text/javascript">
         gapi.plusone.render(document.getElementById("#{id}-googleplusone"), {"size": "tall", "count": "true"});
