@@ -71,19 +71,15 @@ module ApplicationHelper
   def share_box id, share_url
     n = <<-eos
     <div class="cta-shares clearfloat">
-      <div class="cta-share"><fb:like id="#{id}-fblike" href="#{u share_url}" send="false" layout="box_count" show_faces="false" font="arial"></fb:like></div>
+      <div id="#{id}-fblike" class="cta-share"><fb:like href="#{u share_url}" send="false" layout="box_count" show_faces="false" font="arial"></fb:like></div>
       <div class="cta-share"><a href="http://twitter.com/share?count=vertical&url=#{u share_url}" class="twitter-share-button" data-count="horizontal" data-via="4thirtysix">Tweet</a></div>
-      <div class="cta-share"><div id="#{id}-googleplusone"></div></div>
+      <div id="#{id}-gplusone" class="cta-share"></div>
       <script type="text/javascript">
-        gapi.plusone.render(document.getElementById("#{id}-googleplusone"), {"size": "tall", "count": "true"});
-        /*FB.XFBML.parse(document.getElementById('foo'));*/
-      (function(){
-      var twitterWidgets = document.createElement('script');
-      twitterWidgets.type = 'text/javascript';
-      twitterWidgets.async = true;
-      twitterWidgets.src = 'http://platform.twitter.com/widgets.js';
-      document.getElementsByTagName('head')[0].appendChild(twitterWidgets);
-    })();
+        $(document).ready(function() {
+        FB.XFBML.parse(document.getElementById('#{id}-fblike'));
+        $.getScript("http://platform.twitter.com/widgets.js");
+        gapi.plusone.render("#{id}-gplusone", {"size": "tall", "count": "true", "href": "#{share_url}"});
+        });
       </script>
     </div>
     eos
