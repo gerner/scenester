@@ -89,7 +89,7 @@ select {
 	margin:0px auto;
 	padding:10px;
 	background:#ececec;
-	font-size:0.7em;
+	font-size:0.9em;
 	}
 
 .left, .alignleft {
@@ -328,11 +328,11 @@ h3.authors {
 	background:#fff;
 	float:right;
 	padding:10px;
-	margin:10px 0;
+	margin:0 0 10px 0;
 	}
 
 .category {
-	width:164px;
+	width:132px;
 	float:left;
 	border-top:8px solid #333;
 	margin:0px;
@@ -344,15 +344,15 @@ h3.authors {
 	margin:0;
 	}
 
-#cat-1, #cat-3, #cat-5  {border-top:8px solid #333333;}
-#cat-2, #cat-4 {border-top:8px solid #3c78a7;}
+#cat-1, #cat-3, #cat-5  {border-top:8px solid #E9C01B;}
+#cat-2, #cat-4 {border-top:8px solid #F37021;}
 
 .category span.cat_title, #front-popular h3, #front-list .cat_title, #archive .cat_title {
 	text-transform:lowercase;
 	margin:0;
 	font-weight:bold;
-	font-size:1.5em;
 	letter-spacing:-0.05em;
+    font-size: 1.5em;
 	}
 
 #front-popular h3 {
@@ -371,10 +371,10 @@ h3.authors {
 	text-decoration:none;
 	}
 
-#cat-1:hover, #cat-3:hover, #cat-5:hover {background:#333333; color:#fff; }
-#cat-2:hover, #cat-4:hover {background:#3c78a7; color:#fff; }
-#cat-1:hover a, #cat-3:hover a, #cat-5:hover a {background:#333333; color:#fff; }
-#cat-2:hover a, #cat-4:hover a {background:#3c78a7; color:#fff; }
+#cat-1:hover, #cat-3:hover, #cat-5:hover {background:#E9C01B; color:#fff; }
+#cat-2:hover, #cat-4:hover {background:#F37021; color:#fff; }
+#cat-1:hover a, #cat-3:hover a, #cat-5:hover a {background:#E9C01B; color:#fff; }
+#cat-2:hover a, #cat-4:hover a {background:#F37021; color:#fff; }
 
 #bottom {
 	width: 940px;
