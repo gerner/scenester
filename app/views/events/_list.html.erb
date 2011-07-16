@@ -1,6 +1,4 @@
 <div id="eventbox">
-<%= will_paginate @events %>
-<strong><%= page_entries_info @events%></strong>
 <% group_events_by_day(@events).each do |day, events| %>
   <h2 class="day-divider"><%= day_separator(day) %></h2>
   <% events.each do |event| %>

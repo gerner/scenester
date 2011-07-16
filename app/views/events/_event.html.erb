@@ -6,6 +6,7 @@
     <div class="wannadoit">
       <%= button_to "I wanna do it!", event.url, :class => "wannadoitbtn" %>
     </div>
+    <div class="clearfloat"><a style="float:right; margin-top:5px" href="<%= event_path(event) %>">Permalink</a></div>
   </div>
 
           <a href="images/portfolio/portfolio2.jpg" class="fancylightbox" title="Title can be filled in or removed easily"><img src="<%= event.safe_image %>"  alt="" class="alignleft icon" /></a>
