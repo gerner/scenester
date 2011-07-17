@@ -42,7 +42,11 @@ module LoadEvents
   def self.load_events
     events_saved = 0
     self.sources.each do |source|
-      events_saved += self.send("load_"+source)
+      begin
+        events_saved += self.send("load_"+source)
+      rescue
+        self.logger.error("error loading #{source}")
+      end
     end
     return events_saved
   end
