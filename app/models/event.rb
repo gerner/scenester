@@ -25,6 +25,10 @@ class Event < ActiveRecord::Base
   #-------------------
   # static methods
   #-------------------
+
+  def self.find_by_slug slug
+    self.find(slug.split("-").last)
+  end
   
   def self.to_ics(events)
     cal = Icalendar::Calendar.new
@@ -129,6 +133,14 @@ class Event < ActiveRecord::Base
     end
   end
 
+  def slug
+    "#{title.gsub(/[^[:alnum:]]+/i,'-').downcase}-#{id}"
+  end
+
+  def to_param
+    slug
+  end
+
   def venue_with_address
     if venue
       "#{venue.name}, #{venue.address}"
@@ -147,6 +159,15 @@ class Event < ActiveRecord::Base
 
   def pill_content_dom_id
     return "eventpill-#{id}-content"
+  end
+
+  def share_text
+    d = DateTime.now.beginning_of_day
+    text = ""
+    text = "Tonight: " if start.beginning_of_day == d
+    text = "Tomorrow: " if start.beginning_of_day.advance(:days => -1) == d
+    text += title_with_venue
+    return text
   end
 
   def similarity_vector(candidate)
