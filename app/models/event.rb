@@ -12,6 +12,10 @@ def jaccard(a, b)
 end
 
 class Event < ActiveRecord::Base
+  cattr_reader :per_page
+
+  @@per_page = 100
+
   validates_uniqueness_of :source_id, :scope => :source
   validates_presence_of :title
 
