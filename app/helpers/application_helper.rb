@@ -68,11 +68,14 @@ module ApplicationHelper
     end
   end
 
-  def share_box id, share_url
+  def share_box(options = {})
+    id = options[:id]
+    share_url = options[:share_url]
+    content = options[:content]
     n = <<-eos
     <div class="cta-shares clearfloat">
       <div id="#{id}-fblike" class="cta-share"><fb:like href="#{u share_url}" send="false" layout="box_count" show_faces="false" font="arial"></fb:like></div>
-      <div class="cta-share"><a href="http://twitter.com/share?count=vertical&url=#{u share_url}" class="twitter-share-button" data-count="horizontal" data-via="4thirtysix">Tweet</a></div>
+      <div class="cta-share"><a href="http://twitter.com/share?count=vertical&url=#{u share_url}&text=#{u content}" class="twitter-share-button" data-count="horizontal" data-via="4thirtysix">Tweet</a></div>
       <div id="#{id}-gplusone" class="cta-share"></div>
       <script type="text/javascript">
         $(document).ready(function() {

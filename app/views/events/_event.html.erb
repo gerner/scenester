@@ -2,7 +2,7 @@
 <div id="<%= dom_id event %>" class="clearfloat eventbox" data-url="<%= event_path(event) %>" data-object="event">
 
   <div id="<%= dom_id event%>-cta" class="event-cta">
-    <%= share_box(dom_id(event), polymorphic_path(event, :only_path => false)) %>
+    <%= share_box(:id => dom_id(event), :share_url => polymorphic_path(event, :only_path => false), :content => event.share_text) %>
     <div class="wannadoit">
       <%= button_to "I wanna do it!", event.url, :class => "wannadoitbtn" %>
     </div>
