@@ -1,6 +1,7 @@
 <div id="eventbox">
 <% group_events_by_day(@events).each do |day, events| %>
   <h2 class="day-divider"><%= day_separator(day) %></h2>
+  <div class="pills">
   <% events.each do |event| %>
     <% if event.recommended %>
       <%= render :partial => "pill", :locals => {:event => event} %>
@@ -15,6 +16,7 @@
     <% end %>
   <% end %>
   <div class="clearfloat">&nbsp;</div>
+  </div>
 <% end %>
 <%= will_paginate @events %>
 </div>
