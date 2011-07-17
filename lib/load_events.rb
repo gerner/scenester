@@ -390,7 +390,8 @@ module LoadEvents
     times = (0..6).collect { |i| Time.now.advance(:days => i) }
     times.each do |t|
       self.logger.info("getting a batch of seattleweekly events")
-      res = Iconv::iconv("UTF-8", "ISO8859-1", Net::HTTP.get(URI.parse("http://www.seattleweekly.com/events/search/date:#{t.year}-#{t.month}-#{t.day}/perPage:500/"))).first
+      target_page = "http://www.seattleweekly.com/events/search/date:#{t.year}-#{t.month}-#{t.day}/perPage:500/"
+      res = Iconv::iconv("UTF-8", "ISO8859-1", Net::HTTP.get(URI.parse(target_page))).first
       XML::Error.set_handler(&XML::Error::QUIET_HANDLER)
       p = XML::HTMLParser.string(res, :options => XML::HTMLParser::Options::RECOVER | XML::HTMLParser::Options::NONET | XML::HTMLParser::Options::NOERROR | XML::HTMLParser::Options::NOWARNING)
       d = p.parse
@@ -442,7 +443,7 @@ module LoadEvents
 
         events_found += 1
         begin
-          timeStrs = n.find_first("h4").children[2].to_s.split(" ").last.split("-")
+          timeStrs = n.find_first("h4").children.last.to_s.split(" ").last.split("-")
           t2 = Time.parse(timeStrs[0])
           eS = Time.new(t.year, t.month, t.day, t2.hour, t2.min, 0)
           eE = eS.advance(:hours => 2)
