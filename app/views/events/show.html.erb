@@ -1,47 +1,38 @@
 <% content_for :title, "#{@event.title} | Four Thirty-Six" %>
 <p id="notice"><%= notice %></p>
 
+<h1><%= @event.title %></h1>
+  <div id="<%= dom_id @event%>-cta" class="event-cta">
+    <%= share_box(:id => dom_id(@event), :share_url => polymorphic_path(@event, :only_path => false), :content => @event.share_text) %>
+    <div class="wannadoit">
+      <%= button_to "I wanna do it!", @event.url, :class => "wannadoitbtn" %>
+    </div>
+    <div class="clearfloat"><a style="float:right; margin-top:5px" href="<%= event_path(@event) %>">Permalink</a></div>
+  </div>
+
+  <div>
 <p>
-  <b>Image:</b>
-  <%= @event.image %>
+  <strong>When:</strong> <%= @event.start.strftime("%a, %b %d, %l:%M%P") %> <%= "Today!" if @event.tonight? %>
 </p>
 
 <p>
-  <b>Title:</b>
-  <%= @event.title %>
+  <strong>Where:</strong> <%= @event.venue_with_address %>
 </p>
+
+<div id="eventdescription">
+  <%= @event.description %>
+</div>
 
 <p>
-  <b>Url:</b>
-  <%= @event.url %>
+  <%= link_to "More Information", @event.url %>
 </p>
 
-<p>
-  <b>Venue:</b>
-  <%= @event.venue_name %>
-</p>
+<div class="meta">
+  [ <%= link_to @event.source, @event.url %> | <%= @event.tags %> ]
+</div>
+</div>
 
-<p>
-  <b>Start:</b>
-  <%= @event.start %>
-</p>
-
-<p>
-  <b>End:</b>
-  <%= @event.end %>
-</p>
-
-<p>
-  <b>Tags:</b>
-  <%= @event.tags %>
-</p>
-
-<p>
-  <b>Source:</b>
-  <%= @event.source %>
-</p>
-
-<iframe width="640" height="480" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="http://maps.google.com/maps?f=q&amp;source=s_q&amp;hl=en&amp;geocode=&amp;q=Seattle+Repertory+Theatre,+155+Mercer+St,+Seattle,+WA+98109&amp;aq=0&amp;sll=37.0625,-95.677068&amp;sspn=46.409192,92.900391&amp;ie=UTF8&amp;hq=Seattle+Repertory+Theatre,&amp;hnear=155+Mercer+St,+Seattle,+King,+Washington+98109&amp;ll=47.624128,-122.353406&amp;spn=0.006942,0.013733&amp;z=16&amp;iwloc=A&amp;output=embed"></iframe><br /><small><a href="http://maps.google.com/maps?f=q&amp;source=embed&amp;hl=en&amp;geocode=&amp;q=Seattle+Repertory+Theatre,+155+Mercer+St,+Seattle,+WA+98109&amp;aq=0&amp;sll=37.0625,-95.677068&amp;sspn=46.409192,92.900391&amp;ie=UTF8&amp;hq=Seattle+Repertory+Theatre,&amp;hnear=155+Mercer+St,+Seattle,+King,+Washington+98109&amp;ll=47.624128,-122.353406&amp;spn=0.006942,0.013733&amp;z=16&amp;iwloc=A" style="color:#0000FF;text-align:left">View Larger Map</a></small>
+<iframe width="920" height="580" frameborder="0" scrolling="no" marginheight="0" marginwidth="0" src="http://maps.google.com/maps?f=q&amp;source=s_q&amp;hl=en&amp;geocode=&amp;q=<%= u @event.venue_with_address %>&amp;ie=UTF8&amp;z=16&amp;iwloc=A&amp;output=embed"></iframe><br /><small><a href="http://maps.google.com/maps?f=q&amp;source=embed&amp;hl=en&amp;geocode=&amp;q=<%= u @event.venue_with_address %>&amp;ie=UTF8&amp;z=16&amp;iwloc=A" style="color:#0000FF;text-align:left">View Larger Map</a></small>
 
 
 <%= link_to 'Edit', edit_event_path(@event) %> |
