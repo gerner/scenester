@@ -4,7 +4,7 @@
   <div id="<%= dom_id event%>-cta" class="event-cta">
     <%= share_box(:id => dom_id(event), :share_url => polymorphic_path(event, :only_path => false), :content => event.share_text) %>
     <div class="wannadoit">
-      <%= button_to "I wanna do it!", event.url, :class => "wannadoitbtn" %>
+      <%= button_to "I wanna do it!", event_path(event), :class => "wannadoitbtn", :method => :get %>
     </div>
     <div class="clearfloat"><a style="float:right; margin-top:5px" href="<%= event_path(event) %>">Permalink</a></div>
   </div>
@@ -32,11 +32,6 @@
             <div><%= event.description %></div>
           <% end %>
           <!-- <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Fusce cursus nisi vitae nibh sollicitudin a sagittis urna viverra. Donec malesuada tempus enim eleifend egestas. Donec mattis mollis mauris, ut congue ante euismod quis. Phasellus nec rutrum arcu. Pellentesque condimentum dapibus quam, dapibus accumsan nulla sollicitudin vitae.</p> -->
-          <% if event.tonight? %>
-            <%= link_to 'Learn More - Today!', event.url, :class => "colored-button" %>
-          <% else %>
-            <%= link_to 'Learn More', event.url, :class => "button" %>
-          <% end %>
           <% if is_admin %>
             <% if event.recommended %>
               <%= link_to 'Unrecommend', recommend_event_path(event), :method => "delete" %>
