@@ -9,6 +9,8 @@ Events::Application.routes.draw do
   #match "events/:id/recommend", :to => "events#unrecommend", :via => :delete
   resources :venues
 
+  match "blog/:cat/:title", :to => "blog#show" 
+
   get "home/index"
 
   # The priority is based upon order of creation:
