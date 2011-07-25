@@ -332,7 +332,7 @@ h3.authors {
 	}
 
 .category {
-	width:132px;
+	width:106px;
 	float:left;
 	border-top:8px solid #333;
 	margin:0px;
@@ -345,7 +345,7 @@ h3.authors {
 	}
 
 #cat-1, #cat-3, #cat-5  {border-top:8px solid #E9C01B;}
-#cat-2, #cat-4 {border-top:8px solid #F37021;}
+#cat-2, #cat-4, #cat-6 {border-top:8px solid #F37021;}
 
 .category span.cat_title, #front-popular h3, #front-list .cat_title, #archive .cat_title {
 	text-transform:lowercase;
@@ -372,9 +372,9 @@ h3.authors {
 	}
 
 #cat-1:hover, #cat-3:hover, #cat-5:hover {background:#E9C01B; color:#fff; }
-#cat-2:hover, #cat-4:hover {background:#F37021; color:#fff; }
+#cat-2:hover, #cat-4:hover, #cat-6:hover {background:#F37021; color:#fff; }
 #cat-1:hover a, #cat-3:hover a, #cat-5:hover a {background:#E9C01B; color:#fff; }
-#cat-2:hover a, #cat-4:hover a {background:#F37021; color:#fff; }
+#cat-2:hover a, #cat-4:hover a, #cat-6:hover a {background:#F37021; color:#fff; }
 
 #bottom {
 	width: 940px;
