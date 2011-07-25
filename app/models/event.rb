@@ -110,7 +110,7 @@ class Event < ActiveRecord::Base
   #-------------------
   
   def safe_image
-    self.image.blank? ? "/images/seattlelogoinverse.png" : self.image
+    self.image.blank? ? "/images/eventicon.png" : self.image
   end
 
   def tonight?
