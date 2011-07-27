@@ -9,7 +9,7 @@ class EventsController < ApplicationController
     now = Time.new
     today = Time.local(now.year, now.month, now.day, 4, 0, 0)
     #TODO: this should really be in the user's timezone, or in the event catalog's timezone
-    @events = Event.paginate(:conditions => ["start > ? AND tags <> ?", now, "Happy Hours"], :page => params[:page], :per_page => params[:per_page], :order => 'start ASC', :include => [:venue])
+    @events = Event.paginate(:conditions => ["start > ? AND ((tags <> ? AND lower(tags) not like ?) OR recommended = 1)", now, "Happy Hours", "%music%"], :page => params[:page], :per_page => params[:per_page], :order => 'start ASC', :include => [:venue])
 
     respond_to do |format|
       format.html # index.html.erb
