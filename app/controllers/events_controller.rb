@@ -51,6 +51,81 @@ class EventsController < ApplicationController
     end
   end
 
+  def nav_music
+    @nav_cat = :music
+    Time.zone = "America/Los_Angeles"
+    
+    now = Time.new
+    #TODO: this should really be in the user's timezone, or in the event catalog's timezone
+    @events = Event.paginate(:conditions => Event.search_conditions("tag:music", :clauses => ["start > ? AND start < ?"], :values => [now, now.advance(:months => 1)]), :page => params[:page], :per_page => params[:per_page], :order => :start, :include => [:venue])
+    respond_to do |format|
+      format.html { render "index" } 
+      format.rss
+      format.xml  { render :xml => @events }
+      format.ics  { render :text => Event.to_ics(@events) }
+    end
+  end
+
+  def nav_art
+    @nav_cat = :art
+    Time.zone = "America/Los_Angeles"
+    
+    now = Time.new
+    #TODO: this should really be in the user's timezone, or in the event catalog's timezone
+    @events = Event.paginate(:conditions => Event.search_conditions("tags:visual+art,art", :clauses => ["start > ? AND start < ?"], :values => [now, now.advance(:months => 1)]), :page => params[:page], :per_page => params[:per_page], :order => :start, :include => [:venue])
+    respond_to do |format|
+      format.html { render "index" } 
+      format.rss
+      format.xml  { render :xml => @events }
+      format.ics  { render :text => Event.to_ics(@events) }
+    end
+  end
+
+  def nav_tech
+    @nav_cat = :tech
+    Time.zone = "America/Los_Angeles"
+    
+    now = Time.new
+    #TODO: this should really be in the user's timezone, or in the event catalog's timezone
+    @events = Event.paginate(:conditions => Event.search_conditions("tags:tech,technology,seo,socialmedia,php,rails,ruby", :clauses => ["start > ? AND start < ?"], :values => [now, now.advance(:months => 1)]), :page => params[:page], :per_page => params[:per_page], :order => :start, :include => [:venue])
+    respond_to do |format|
+      format.html { render "index" } 
+      format.rss
+      format.xml  { render :xml => @events }
+      format.ics  { render :text => Event.to_ics(@events) }
+    end
+  end
+
+  def nav_film
+    @nav_cat = :film
+    Time.zone = "America/Los_Angeles"
+    
+    now = Time.new
+    #TODO: this should really be in the user's timezone, or in the event catalog's timezone
+    @events = Event.paginate(:conditions => Event.search_conditions("tags:film,siff", :clauses => ["start > ? AND start < ?"], :values => [now, now.advance(:months => 1)]), :page => params[:page], :per_page => params[:per_page], :order => :start, :include => [:venue])
+    respond_to do |format|
+      format.html { render "index" } 
+      format.rss
+      format.xml  { render :xml => @events }
+      format.ics  { render :text => Event.to_ics(@events) }
+    end
+  end
+
+  def nav_theater
+    @nav_cat = :theater
+    Time.zone = "America/Los_Angeles"
+    
+    now = Time.new
+    #TODO: this should really be in the user's timezone, or in the event catalog's timezone
+    @events = Event.paginate(:conditions => Event.search_conditions("tags:theater,performing+arts", :clauses => ["start > ? AND start < ?"], :values => [now, now.advance(:months => 1)]), :page => params[:page], :per_page => params[:per_page], :order => :start, :include => [:venue])
+    respond_to do |format|
+      format.html { render "index" } 
+      format.rss
+      format.xml  { render :xml => @events }
+      format.ics  { render :text => Event.to_ics(@events) }
+    end
+  end
+
   def foursquare
     authorization_code="EWPW4SAQO3THR24WGOJ4TSY5AK5VFSIVSTBG2HQAFYRFZLQ0"
 

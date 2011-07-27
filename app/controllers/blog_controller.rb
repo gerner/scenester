@@ -1,7 +1,7 @@
 class BlogController < ApplicationController
   def show
     result = fetch(
-            "http://fourthirtysix.com/#{request.fullpath}")
+            "http://205.251.128.170/#{request.fullpath}")
 
     #render error if result. ...
     case response.code
@@ -20,7 +20,7 @@ class BlogController < ApplicationController
 
       logger.info(uri_str)
 
-      response = Net::HTTP.get_response(URI.parse(uri_str))
+      response = Net::HTTP.get(URI.parse(uri_str), {"host" => "fourthirtysix.com"} )
       case response
       when Net::HTTPSuccess     then response
       when Net::HTTPRedirection then fetch(response['location'], limit - 1)

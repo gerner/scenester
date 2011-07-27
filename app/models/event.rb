@@ -1,6 +1,6 @@
 ATTEND_HOURS_BEFORE = 2
 ATTEND_HOURS_AFTER = 1
-QUERY_OPERATORS = ["source", "venue", "tag"]
+QUERY_OPERATORS = ["source", "venue", "tag", "tags"]
 
 STOP_WORDS = Set.new ["the", "of"]
 
@@ -96,6 +96,17 @@ class Event < ActiveRecord::Base
           values << "#{op[1]},%"
           values << "%,#{op[1]}"
           values << op[1]
+        elsif(op[0] == "tags")
+          tags_clauses = []
+          op[1].split(",").each do |tag|
+            tags_clauses << "(lower(tags) LIKE ? OR lower(tags) LIKE ? OR lower(tags) LIKE ? OR lower(tags) LIKE ?)"
+            tag = CGI::unescape(tag.strip)
+            values << "%,#{tag}%, %"
+            values << "#{tag}%,%"
+            values << "%,#{tag}%"
+            values << "#{tag}%"
+          end
+          clauses << "("+tags_clauses.join("or")+")"
         end
       else
         clauses << "lower(title) LIKE ?"

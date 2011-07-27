@@ -5,10 +5,16 @@ Events::Application.routes.draw do
     delete 'recommend', :on => :member, :action => 'unrecommend'
     get 'partial', :on => :member, :action => 'show_partial'
   end
+  match "music", :to => "events#nav_music"
+  match "tech", :to => "events#nav_tech"
+  match "art", :to => "events#nav_art"
+  match "film", :to => "events#nav_film"
+  match "theater", :to => "events#nav_theater"
   #match "events/:id/recommend", :to => "events#recommend", :via => :post
   #match "events/:id/recommend", :to => "events#unrecommend", :via => :delete
   resources :venues
 
+  match "blog" => "blog#show"
   match "blog/:cat/:title", :to => "blog#show" 
 
   get "home/index"
