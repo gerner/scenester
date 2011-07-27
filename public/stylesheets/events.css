@@ -43,9 +43,9 @@
 	text-decoration:none;
 	}
 
-#middle .selected-odd {background:#333333; color:#fff; }
+#middle .selected-odd {background:#E9C01B; color:#fff; }
 #middle .selected-even {background:#3c78a7; color:#fff; }
-#middle .selected-odd a {background:#333333; color:#fff; }
+#middle .selected-odd a {background:#E9C01B; color:#fff; }
 #middle .selected-even a {background:#3c78a7; color:#fff; }
 
 #loginbox {

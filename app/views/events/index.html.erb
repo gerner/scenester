@@ -1,1 +1,4 @@
+<% if @nav_cat %>
+  <h1><%= @nav_cat.to_s.titlecase %></h1>
+<% end %>
 <%= render 'list' %>
