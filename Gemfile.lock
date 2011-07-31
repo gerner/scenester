@@ -147,6 +147,7 @@ DEPENDENCIES
   libxml-ruby
   omniauth
   rMeetup
+  rack (= 1.2.1)
   rack-rewrite
   rails (= 3.0.4)
   ri_cal

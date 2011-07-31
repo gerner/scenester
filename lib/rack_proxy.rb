@@ -54,7 +54,7 @@ class Rack::Proxy
       print "processing header #{k}: #{v}\n"
       headers[k] = v unless k.to_s =~ /cookie|content-length|transfer-encoding/i
       if k.to_s =~ /cookie/i
-        headers[k] = sub_response.get_fields(k)#.join("\n")
+        headers[k] = sub_response.get_fields(k).join("\n")
         print "set #{k} to:\n#{headers[k]}\n"
       end
     end
