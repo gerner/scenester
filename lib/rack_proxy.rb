@@ -39,24 +39,24 @@ class Rack::Proxy
     sub_request["Cookie"] = req.env["rack.request.cookie_string"] if req.env["rack.request.cookie_string"]
     sub_request.basic_auth *uri.userinfo.split(':') if (uri.userinfo && uri.userinfo.index(':'))
 
+    print "sending:\n#{sub_request.inspect}\n"
+
     sub_response = Net::HTTP.start(uri.host, uri.port) do |http|
       http.request(sub_request)
     end
+    
+    print "received:\n#{sub_response.inspect}\n"
 
     headers = {}
     sub_response.each_header do |k,v|
+      print "processing header #{k}: #{v}\n"
       headers[k] = v unless k.to_s =~ /cookie|content-length|transfer-encoding/i
+      if k.to_s =~ /cookie/i
+        headers[k] = v.gsub(/, /, "\n")
+      end
+      print "#{headers[k]}\n"
     end
 
-    response = Rack::Response.new([sub_response.read_body], sub_response.code.to_i, headers)
-
-
-    sub_response.get_fields('Set-Cookie') do |k,v| 
-      print "setting cookie #{k} to #{v}"
-      response.set_cookie(k,v)
-    end
-
-    response.finish
-
+    [sub_response.code.to_i, headers,[sub_response.read_body]]
   end
 end
