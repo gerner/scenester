@@ -40,6 +40,7 @@ class Rack::Proxy
     sub_request.basic_auth *uri.userinfo.split(':') if (uri.userinfo && uri.userinfo.index(':'))
 
     print "sending:\n#{sub_request.inspect}\n"
+    print "cookie:\n#{sub_request["Cookie"]}\n"
 
     sub_response = Net::HTTP.start(uri.host, uri.port) do |http|
       http.request(sub_request)
@@ -48,13 +49,14 @@ class Rack::Proxy
     print "received:\n#{sub_response.inspect}\n"
 
     headers = {}
+    cookies = []
     sub_response.each_header do |k,v|
       print "processing header #{k}: #{v}\n"
       headers[k] = v unless k.to_s =~ /cookie|content-length|transfer-encoding/i
       if k.to_s =~ /cookie/i
-        headers[k] = v.gsub(/, /, "\n")
+        headers[k] = sub_response.get_fields(k).join("\n")
+        print "set #{k} to:\n#{headers[k]}\n"
       end
-      print "#{headers[k]}\n"
     end
 
     [sub_response.code.to_i, headers,[sub_response.read_body]]
