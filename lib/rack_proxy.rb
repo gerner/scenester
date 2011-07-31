@@ -45,9 +45,16 @@ class Rack::Proxy
 
     headers = {}
     sub_response.each_header do |k,v|
-      headers[k] = v unless k.to_s =~ /content-length|transfer-encoding/i #unless k.to_s =~ /cookie|content-length|transfer-encoding/i
+      headers[k] = v unless k.to_s =~ /cookie|content-length|transfer-encoding/i 
     end
 
-    [sub_response.code.to_i, headers, [sub_response.read_body]]
+    response = Rack::Response.new([sub_response.read_body], sub_response.code.to_i, headers)
+
+    sub_response.get_fields('Set-Cookie') do |k,v| 
+      response.set_cookie(k,v)
+    end
+
+    response.finish
+
   end
 end
