@@ -52,7 +52,7 @@ class Rack::Proxy
       print "processing header #{k}: #{v}\n"
       headers[k] = v unless k.to_s =~ /cookie|content-length|transfer-encoding/i
       if k.to_s =~ /cookie/i
-        headers[k] = v.gsub(/, /, "\n")
+        headers[k] = v.split(", ")
       end
       print "#{headers[k]}\n"
     end
