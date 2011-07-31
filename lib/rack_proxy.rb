@@ -39,7 +39,7 @@ class Rack::Proxy
     sub_request["Cookie"] = req.env["HTTP_COOKIE"] if req.env["HTTP_COOKIE"]
     sub_request.basic_auth *uri.userinfo.split(':') if (uri.userinfo && uri.userinfo.index(':'))
 
-    print "sending:\n#{sub_request.inspect}\n"
+    print "sending:\n#{sub_request.inspect} to #{uri.to_s}\n"
     print "cookie:\n#{sub_request["Cookie"]}\n"
 
     sub_response = Net::HTTP.start(uri.host, uri.port) do |http|
