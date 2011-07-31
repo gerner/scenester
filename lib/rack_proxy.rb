@@ -36,7 +36,7 @@ class Rack::Proxy
     sub_request["Accept-Encoding"] = req.accept_encoding
     sub_request["Referer"] = req.referer
     sub_request["Host"] = "fourthirtysix.com"
-    sub_request["Cookie"] = req.env["rack.request.cookie_string"] if req.env["rack.request.cookie_string"]
+    sub_request["Cookie"] = req.env["HTTP_COOKIE"] if req.env["HTTP_COOKIE"]
     sub_request.basic_auth *uri.userinfo.split(':') if (uri.userinfo && uri.userinfo.index(':'))
 
     print "sending:\n#{sub_request.inspect}\n"
