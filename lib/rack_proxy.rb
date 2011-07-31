@@ -35,7 +35,7 @@ class Rack::Proxy
     sub_request["X-Requested-With"] = req.env['HTTP_X_REQUESTED_WITH'] if req.env['HTTP_X_REQUESTED_WITH']
     sub_request["Accept-Encoding"] = req.accept_encoding
     sub_request["Referer"] = req.referer
-    sub_request["Host"] = "blog.fourthirtysix.com"
+    sub_request["Host"] = "fourthirtysix.com"
     sub_request["Cookie"] = req.env["rack.request.cookie_string"] if req.env["rack.request.cookie_string"]
     sub_request.basic_auth *uri.userinfo.split(':') if (uri.userinfo && uri.userinfo.index(':'))
 
@@ -50,9 +50,13 @@ class Rack::Proxy
 
     response = Rack::Response.new([sub_response.read_body], sub_response.code.to_i, headers)
 
+    print sub_response.get_fields('Set-Cookie')
+
     sub_response.get_fields('Set-Cookie') do |k,v| 
       response.set_cookie(k,v)
     end
+
+    print response.inspect
 
     response.finish
 
