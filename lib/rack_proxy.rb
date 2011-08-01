@@ -59,7 +59,7 @@ class Rack::Proxy
           cookie = {}
           v.split(";").each do |p|
             parts = p.split("=")
-            cookie[:value] = parts[1].strip() unless key
+            cookie[:value] = CGI::unescape(parts[1].strip()) unless key
             key = parts[0].strip() unless key
             case parts[0].strip()
             when "domain"
