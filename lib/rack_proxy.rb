@@ -50,15 +50,35 @@ class Rack::Proxy
 
     headers = {}
     cookies = []
-        Rack::Utils.set_cookie_header!(headers, "foo", "bar")
-        Rack::Utils.set_cookie_header!(headers, "baz", "blerf")
     sub_response.each_header do |k,v|
       print "processing header #{k}: #{v}\n"
       headers[k] = v unless k.to_s =~ /cookie|content-length|transfer-encoding/i
-      #if k.to_s =~ /cookie/i
-      #  headers[k] = sub_response.get_fields(k).join("\n")
-      #  print "set #{k} to:\n#{headers[k]}\n"
-      #end
+      if k.to_s =~ /cookie/i
+        sub_response.get_fields(k).each do |v|
+          key = nil
+          cookie = {}
+          v.split(";").each do |p|
+            parts = p.split("=")
+            cookie[:value] = parts[1].strip() unless key
+            key = parts[0].strip() unless key
+            case parts[0].strip()
+            when "domain"
+              cookie[:domain] = parts[1].strip()
+            when "path"
+              cookie[:path] = parts[1].strip()
+            when "expires"
+              cookie[:expires] = Time.parse(parts[1])
+            when "secure"
+              cookie[:secure] = true
+            when "HttpOnly"
+              cookie[:httponly] = true
+            end
+          end
+          print "setting #{key} #{cookie}\n"
+          Rack::Utils.set_cookie_header!(headers, key, cookie)
+          print "set-cookie is now:\n#{headers["Set-Cookie"]}\n"
+        end
+      end
     end
 
     [sub_response.code.to_i, headers,[sub_response.read_body]]
