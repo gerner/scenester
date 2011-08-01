@@ -80,6 +80,8 @@ class Rack::Proxy
         end
       end
     end
+    Rack::Utils.set_cookie_header!(headers, "foo", "bar")
+    Rack::Utils.set_cookie_header!(headers, "baz", "blerf")
 
     [sub_response.code.to_i, headers,[sub_response.read_body]]
   end
